@@ -1,0 +1,24 @@
+This file has the instructions for setup.
+
+1.  sudo apt-get update
+    sudo apt-get install -y \
+    qemu-system-arm qemu-system-misc qemu-system-aarch64 qemu-efi \
+    gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu \
+    gdb-multiarch make
+
+2.  qemu-img create -f qcow2 myos.qcow2 2G
+
+
+3.  aarch64-linux-gnu-g++ -ffreestanding -nostdlib -fno-exceptions -fno-rtti -fno-threadsafe-statics -O2 -c kernel.cpp -o kernel.o
+    aarch64-linux-gnu-g++ -ffreestanding -nostdlib -fno-exceptions -fno-rtti -fno-threadsafe-statics -O2 -c process.cpp -o process.o
+    aarch64-linux-gnu-g++ -ffreestanding -nostdlib -fno-exceptions -fno-rtti -fno-threadsafe-statics -O2 -c uart.cpp -o uart.o
+    aarch64-linux-gnu-gcc -ffreestanding -nostdlib -O2 -c boot.S -o boot.o
+    aarch64-linux-gnu-ld -T linker.ld -o kernel.elf boot.o kernel.o process.o uart.o
+
+
+4.  qemu-system-aarch64 -M virt -cpu cortex-a53 -kernel kernel.elf -nographic
+
+
+
+
+

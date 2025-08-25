@@ -133,3 +133,12 @@ pkill qemu-system-aarch64
 - Boot a **minimal user program**.
 
 
+
+## Contibutions:
+Since this module involved foundational tasks that everyone on the team should understand, we collaborated closely and developed it together. Therefore, the contribution was equal among all team members.
+- T Mokshith Reddy - CS22B046
+- Sasaank - CS22B059
+- Sonith - CS22B036
+- Kalyan Anudeep - CS22B025
+
+

@@ -1,5 +1,3 @@
-#!/bin/bash
-
 echo "=== Debug Information ==="
 
 # Check if the ELF file has the right sections

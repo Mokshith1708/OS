@@ -1,0 +1,8 @@
+file build/OS.elf
+target remote :1234
+tbreak kmain.c:19
+continue
+echo "\n--- Program paused at breakpoint. Checking for magic number... ---\n"
+x /x _USER_SPACE_START
+echo "\n"
+quit

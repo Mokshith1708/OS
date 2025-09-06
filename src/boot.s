@@ -1,79 +1,66 @@
 .syntax unified
-.cpu cortex-m3
+.cpu cortex-m0
 .thumb
 
-/* Make all handlers visible to the linker */
 .global Reset_Handler
 .global NMI_Handler
 .global HardFault_Handler
 .global Default_Handler
 
-/*
- * The vector table for a Cortex-M3.
- * The LSB of each handler address must be 1 to indicate Thumb mode.
- * The linker usually handles this automatically, but we will be explicit
- * by adding "+1" to the function addresses. This is a robust way to ensure
- * the CPU enters the correct execution state.
- */
 .section .isr_vector
-.word _estack                 /* Initial Stack Pointer */
-.word Reset_Handler + 1       /* Reset Handler */
-.word NMI_Handler + 1         /* NMI Handler */
-.word HardFault_Handler + 1   /* HardFault Handler */
-.word Default_Handler + 1     /* MemManage Fault Handler */
-.word Default_Handler + 1     /* BusFault Handler */
-.word Default_Handler + 1     /* UsageFault Handler */
-
+.word _estack
+.word Reset_Handler + 1
+.word NMI_Handler + 1
+.word HardFault_Handler + 1
+.word Default_Handler + 1
+.word Default_Handler + 1
+.word Default_Handler + 1
 
 .section .text
-/*
- * Reset_Handler: This is the entry point of the system.
- */
 .thumb_func
 Reset_Handler:
-    /* Copy the .data section from FLASH to RAM.
-       The Cortex-M3 supports post-indexed addressing, which is more efficient. */
+    /* copy .data */
     ldr r0, =_etext
     ldr r1, =_sdata
     ldr r2, =_edata
-copy_loop:
-    cmp r1, r2
-    bhs copy_done
-    ldr r3, [r0], #4
-    str r3, [r1], #4
-    b copy_loop
-copy_done:
-
-    /* Zero out the .bss section in RAM */
+1:  cmp r1, r2
+    bhs 2f
+    ldr r3, [r0]
+    str r3, [r1]
+    adds r0, #4
+    adds r1, #4
+    b 1b
+2:
+    /* zero .bss */
     ldr r0, =_sbss
     ldr r1, =_ebss
     movs r2, #0
-zero_loop:
-    cmp r0, r1
-    bhs zero_done
-    str r2, [r0], #4
-    b zero_loop
-zero_done:
+3:  cmp r0, r1
+    bhs 4f
+    str r2, [r0]
+    adds r0, #4
+    b 3b
+4:
+    bl  kmain
+    b   .
 
-    /* Jump to the main C function */
-    bl kmain
-
-    /* If kmain ever returns, trap the CPU in an infinite loop */
-    b .
-
-/*
- * Exception Handlers
- * We provide distinct, simple handlers for critical faults.
- * If the system crashes, a debugger will show the PC stuck in one of these loops,
- * telling us what kind of fault occurred.
- */
 .thumb_func
 NMI_Handler:
     b .
 
+/* Print '!' on UART (0x4000C000 DR, 0x4000C018 FR) then loop.
+   This makes invisible HardFaults obvious. */
 .thumb_func
 HardFault_Handler:
-    b .
+    ldr r0, =0x4000C018     /* UART FR */
+    ldr r1, [r0]
+    movs r2, #(1<<5)        /* TXFF bit */
+    tst r1, r2
+    bne 1f                  /* if full, skip once (best effort) */
+    ldr r3, =0x4000C000     /* UART DR */
+    movs r4, #'!'
+    str r4, [r3]
+1:  b .
 
 .thumb_func
 Default_Handler:

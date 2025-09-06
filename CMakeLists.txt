@@ -8,7 +8,7 @@ set(CMAKE_ASM_COMPILER ${TOOLCHAIN_PREFIX}gcc)
 set(CMAKE_OBJCOPY ${TOOLCHAIN_PREFIX}objcopy)
 set(CMAKE_SIZE ${TOOLCHAIN_PREFIX}size)
 
-set(CPU_FLAGS "-mcpu=cortex-m3 -mthumb")
+set(CPU_FLAGS "-mcpu=cortex-m0 -mthumb")
 set(CMAKE_C_FLAGS "${CPU_FLAGS} -g -Wall -Os -ffunction-sections -fdata-sections" CACHE INTERNAL "")
 set(CMAKE_ASM_FLAGS "${CPU_FLAGS} -g" CACHE INTERNAL "")
 
@@ -17,6 +17,11 @@ set(SOURCE_FILES
     src/boot.s
     src/hal/hal_console.c
     src/pmm.c
+    src/shell.c          
+    src/proc.c           
+    src/semihost.c       
+    src/swap.c
+    src/jump_trampoline.s 
 )
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/src/linker.ld)
 

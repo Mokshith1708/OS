@@ -15,4 +15,7 @@ SECTIONS
     .data : AT (ADDR(.text) + SIZEOF(.text)) { . = ALIGN(4); _sdata = .; *(.data .data*) . = ALIGN(4); _edata = .; } > RAM
     .bss (NOLOAD) : { . = ALIGN(4); _sbss = .; *(.bss .bss*) *(COMMON) . = ALIGN(4); _ebss = .; } > RAM
 }
-
+PROVIDE(__ram_start__ = ORIGIN(RAM));
+PROVIDE(__ram_end__   = ORIGIN(RAM) + LENGTH(RAM));
+__app_ram_start__ = 0x20000000;     /* beginning of user app region */
+__app_ram_end__   = 0x2000F000;     /* end of user app region (exclusive) */

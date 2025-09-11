@@ -13,8 +13,10 @@ arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -Os -ffreestanding -nostdlib -nostartf
 
 arm-none-eabi-objcopy -O binary "$OUT_DIR/hello_app.elf" "$OUT_DIR/hello_app.bin"
 
+
+
 # pad to 60 KiB = 61440
-truncate -s 61440 "$OUT_DIR/hello_app.bin"
+truncate -s 30720 "$OUT_DIR/hello_app.bin"
 
 # build packer if needed
 cc -O2 -o "$TOOLS_DIR/pack_app" "$TOOLS_DIR/pack_app.c"

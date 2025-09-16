@@ -1,3 +1,4 @@
+/* boot.s */
 .syntax unified
 .cpu cortex-m0
 .thumb

@@ -3,7 +3,6 @@
 #include "proc.h"
 #include "hal/hal_console.h"
 
-
 /* App RAM window (provided by linker) */
 extern uint32_t __app_ram_start__[];
 extern uint32_t __app_ram_end__[];

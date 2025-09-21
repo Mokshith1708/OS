@@ -1,10 +1,46 @@
+// #include "hal/hal_console.h"
+
+// void kmain(void) {
+//     hal_console_init();
+//     hal_console_puts("[OS] Boot OK (MPS2-AN385)\n");
+
+//     hal_console_puts("Counting: ");
+//     for (int i = 0; i < 5; i++) {
+//         hal_console_put_int(i);
+//         hal_console_putc(' ');
+//     }
+//     hal_console_putc('\n');
+
+//     hal_console_puts("Hex values: ");
+//     for (int i = 0; i < 5; i++) {
+//         hal_console_put_hex(0xDEADBEEF + i);
+//         hal_console_putc(' ');
+//     }
+//     hal_console_putc('\n');
+
+//     hal_console_puts("Entering infinite loop...\n");
+//     while (1) {
+//         /* optionally echo */
+//         // int c = hal_console_getchar();
+//         // hal_console_putc(c);
+//     }
+// }
+
+
+
 #include "hal/hal_console.h"
 #include "shell.h"
 
 void kmain(void) {
   hal_console_init();                     // your UART init
+  // debug_step();   
   hal_console_puts("[OS] Boot OK (M0-safe)\r\n");
+  // debug_step();   
   hal_console_puts("hi\r\n");
+  // debug_step();   
+
+  hal_console_puts("Testing 123\r\n");
+
   shell_run();                            // blocking shell
   for(;;) { /* idle */ }
 }

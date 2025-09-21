@@ -1,145 +1,127 @@
-/* === MPS2-AN385 MEMORY LAYOUT (QEMU Specific) === */
+/* === MPS2-AN385 MEMORY LAYOUT (16MB RAM, Kernel/User Split) === */
 MEMORY
 {
-    /* MPS2-AN385 Flash/ROM */
     FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 4M
-    
-    /* MPS2-AN385 ZBT SSRAM1 (main RAM) */
-    RAM (rwx)  : ORIGIN = 0x21000000, LENGTH = 4M
-    
-    /* Alternative SRAM regions (if needed) */
-    SRAM2 (rwx) : ORIGIN = 0x20000000, LENGTH = 1M
+    RAM   (rw) : ORIGIN = 0x20000000, LENGTH = 16M
 }
 
-/* Kernel and User memory split */
+/* Kernel/User split */
 _KERNEL_RAM_START = ORIGIN(RAM);
-_USER_SPACE_SIZE  = LENGTH(RAM) / 2;        /* 2 MB user */
-_KERNEL_RAM_SIZE  = LENGTH(RAM) - _USER_SPACE_SIZE; /* 2 MB kernel */
+_KERNEL_RAM_SIZE  = LENGTH(RAM)/2;          /* 8 MB kernel */
 _USER_SPACE_START = _KERNEL_RAM_START + _KERNEL_RAM_SIZE;
+_USER_SPACE_SIZE  = LENGTH(RAM)/2;          /* 8 MB user */
 
-/* Stack pointer - at top of RAM */
-_estack = ORIGIN(RAM) + LENGTH(RAM);
+/* Minimum stack & heap sizes */
+_Min_Stack_Size = 0x100000; /* 1 MB */
+_Min_Heap_Size  = 0x2000;   /* 8 KB */
 
-/* End of kernel symbol for C code */
-_kernel_end = _KERNEL_RAM_START + _KERNEL_RAM_SIZE;
+/* Stack pointer and kernel end */
+PROVIDE(_estack = _KERNEL_RAM_START + _KERNEL_RAM_SIZE); /* initial SP */
+PROVIDE(_kernel_end = _KERNEL_RAM_START + _KERNEL_RAM_SIZE);
 
-/* === ENTRY POINT === */
+/* Entry point */
 ENTRY(Reset_Handler)
 
-/* === SECTIONS === */
 SECTIONS
 {
-    /* --- VECTOR TABLE --- */
+    /* === Vector Table in FLASH === */
     .isr_vector :
     {
-        . = ALIGN(4);
         KEEP(*(.isr_vector))
         . = ALIGN(4);
     } > FLASH
-    
-    /* --- TEXT SECTION --- */
+
+    /* === Text + RO Data in FLASH === */
     .text :
     {
-        . = ALIGN(4);
-        *(.text .text*)
-        *(.rodata .rodata*)
-        
-        /* Constructor/Destructor tables */
-        . = ALIGN(4);
-        __preinit_array_start = .;
-        KEEP(*(.preinit_array*))
-        __preinit_array_end = .;
-        
-        __init_array_start = .;
-        KEEP(*(.init_array*))
-        __init_array_end = .;
-        
-        __fini_array_start = .;
-        KEEP(*(.fini_array*))
-        __fini_array_end = .;
-        
-        . = ALIGN(4);
-        _etext = .;
-    } > FLASH
-
-    /* --- INIT SECTIONS --- */
-    .init :
-    {
-        . = ALIGN(4);
+        *(.text*)
+        *(.rodata*)
         KEEP(*(.init))
-        . = ALIGN(4);
-    } > FLASH
-    
-    .fini :
-    {
-        . = ALIGN(4);
         KEEP(*(.fini))
         . = ALIGN(4);
+        _etext = .;
+        _sidata = LOADADDR(.kernel_data);
     } > FLASH
 
-    /* --- DATA SECTION (initialized RAM) --- */
-    .data :
+    /* === Kernel RAM Sections === */
+    .kernel_data :
     {
-        . = ALIGN(4);
         _sdata = .;
-        *(.data .data*)
-        . = ALIGN(4);
+        *(.data*)
         _edata = .;
     } > RAM AT> FLASH
-    
-    /* Store the LMA of .data section */
-    _sidata = LOADADDR(.data);
 
-    /* --- BSS SECTION (zero-initialized RAM) --- */
-    .bss (NOLOAD) :
+    .kernel_bss (NOLOAD) :
     {
-        . = ALIGN(4);
         _sbss = .;
-        *(.bss .bss*)
+        *(.bss*)
         *(COMMON)
-        . = ALIGN(4);
         _ebss = .;
     } > RAM
-    
-    /* --- HEAP SECTION --- */
-    .heap (NOLOAD) :
+
+    .kernel_heap (NOLOAD) :
     {
-        . = ALIGN(8);
-        __heap_start__ = .;
-        . = . + 0x1000; /* 4KB heap, adjust as needed */
-        __heap_end__ = .;
-    } > RAM
-    
-    /* --- STACK SECTION --- */
-    .stack (NOLOAD) :
-    {
-        . = ALIGN(8);
-        . = . + 0x1000; /* 4KB stack, adjust as needed */
-        . = ALIGN(8);
+        _kheap_start = .;
+        . = . + _Min_Heap_Size;
+        _kheap_end = .;
     } > RAM
 
-    /* Discard unwanted sections */
-    /DISCARD/ :
+    .kernel_stack (NOLOAD) :
     {
-        *(.ARM.exidx*)
-        *(.ARM.extab*)
-    }
+        _kstack_top = _KERNEL_RAM_START + _KERNEL_RAM_SIZE;
+        _kstack_bottom = _kstack_top - _Min_Stack_Size;
+    } > RAM
+
+    /* === User RAM Sections === */
+    .user_data :
+    {
+        _usdata = .;
+        *(.user_data*)
+        _uedata = .;
+    } > RAM AT> FLASH
+
+    .user_bss (NOLOAD) :
+    {
+        _usbss = .;
+        *(.user_bss*)
+        _uebss = .;
+    } > RAM
+
+    .user_heap (NOLOAD) :
+    {
+        _uheap_start = .;
+        . = . + _Min_Heap_Size;
+        _uheap_end = .;
+    } > RAM
+
+    .user_stack (NOLOAD) :
+    {
+        _ustack_top = _USER_SPACE_START + _USER_SPACE_SIZE;
+        _ustack_bottom = _ustack_top - _Min_Stack_Size;
+    } > RAM
 }
 
-/* --- USER APP RAM REGION --- */
-__app_ram_start__ = _USER_SPACE_START;
-__app_ram_end__   = _USER_SPACE_START + _USER_SPACE_SIZE;
+/* --- User App RAM Region --- */
+PROVIDE(__app_ram_start__ = _USER_SPACE_START);
+PROVIDE(__app_ram_end__   = _USER_SPACE_START + _USER_SPACE_SIZE);
 
-/* --- RAM START/END --- */
+/* --- RAM Start/End --- */
 PROVIDE(__ram_start__ = ORIGIN(RAM));
 PROVIDE(__ram_end__   = ORIGIN(RAM) + LENGTH(RAM));
 
-/* --- HEAP/STACK SYMBOLS --- */
-PROVIDE(__heap_start = __heap_start__);
-PROVIDE(__heap_end = __heap_end__);
+/* --- Heap/Stack Symbols --- */
+PROVIDE(__kheap_start   = _kheap_start);
+PROVIDE(__kheap_end     = _kheap_end);
+PROVIDE(__kstack_top    = _kstack_top);
+PROVIDE(__kstack_bottom = _kstack_bottom);
 
-/* --- DEBUG INFO --- */
+PROVIDE(__uheap_start   = _uheap_start);
+PROVIDE(__uheap_end     = _uheap_end);
+PROVIDE(__ustack_top    = _ustack_top);
+PROVIDE(__ustack_bottom = _ustack_bottom);
+
+/* --- Debug Info --- */
 PROVIDE(_flash_start = ORIGIN(FLASH));
-PROVIDE(_flash_size = LENGTH(FLASH));
-PROVIDE(_ram_start = ORIGIN(RAM));
-PROVIDE(_ram_size = LENGTH(RAM));
+PROVIDE(_flash_size  = LENGTH(FLASH));
+PROVIDE(_ram_start   = ORIGIN(RAM));
+PROVIDE(_ram_size    = LENGTH(RAM));

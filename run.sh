@@ -27,7 +27,8 @@ qemu-system-arm \
   -cpu cortex-m3 \
   -m 16M \
   -nographic \
-  -semihosting-config enable=on,target=native \
+  -serial null -serial mon:stdio \
+  -semihosting \
   -kernel build/OS.elf | tee "$LOG_FILE"
 
 echo

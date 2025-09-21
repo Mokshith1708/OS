@@ -2,10 +2,47 @@
 #include "hal/hal_console.h"
 #include "proc.h"
 
+// Symbols from linker script
 extern char __ram_start__, __ram_end__;
-#define RAM_BASE ((uintptr_t)&__ram_start__)
-#define RAM_END  ((uintptr_t)&__ram_end__)
-#define RAM_SIZE (RAM_END - RAM_BASE)
+extern char __app_ram_start__, __app_ram_end__;
+
+// Calculate regions
+#define RAM_BASE      ((uintptr_t)&__ram_start__)
+#define RAM_END       ((uintptr_t)&__ram_end__)
+#define RAM_SIZE      (RAM_END - RAM_BASE)
+
+#define USER_RAM_BASE ((uintptr_t)&__app_ram_start__)
+#define USER_RAM_END  ((uintptr_t)&__app_ram_end__)
+#define USER_RAM_SIZE (USER_RAM_END - USER_RAM_BASE)
+
+// --- Small helpers for printing numbers without libc ---
+
+static void print_hex(uintptr_t val) {
+  char buf[11];
+  const char hexchars[] = "0123456789ABCDEF";
+  buf[0] = '0';
+  buf[1] = 'x';
+  for (int i = 0; i < 8; i++) {
+    buf[9 - i] = hexchars[val & 0xF];
+    val >>= 4;
+  }
+  buf[10] = 0;
+  hal_console_puts(buf);
+}
+
+static void print_dec(uintptr_t val) {
+  char buf[20];
+  int i = 19;
+  buf[i--] = 0;
+  if (val == 0) buf[i--] = '0';
+  while (val > 0 && i >= 0) {
+    buf[i--] = '0' + (val % 10);
+    val /= 10;
+  }
+  hal_console_puts(&buf[i+1]);
+}
+
+// --- Shell helpers ---
 
 static int readline(char *buf, int max) {
   int n = 0;
@@ -35,6 +72,8 @@ static int starts(const char *s, const char *pfx) {
   return 1;
 }
 
+// --- Commands ---
+
 static void cmd_help(void) {
   hal_console_puts("Commands:\r\n");
   hal_console_puts("  help                 - show this help\r\n");
@@ -42,15 +81,22 @@ static void cmd_help(void) {
   hal_console_puts("  run <path>           - load & jump to image\r\n");
   hal_console_puts("  save <path>          - snapshot RAM to file\r\n");
   hal_console_puts("  load <path>          - alias of run\r\n");
+  hal_console_puts("  exit                 - exit shell\r\n");
 }
 
 static void cmd_meminfo(void) {
-  char buf[96];
-  // Simple print without sprintf
-  hal_console_puts("RAM_BASE=0x20000000\r\n"); // matches lm3s linker map
-  hal_console_puts("RAM_SIZE=65536 bytes\r\n");
-  (void)buf;
+  hal_console_puts("Kernel + User RAM Info:\r\n");
+  hal_console_puts("  RAM_BASE = "); print_hex(RAM_BASE); hal_console_puts("\r\n");
+  hal_console_puts("  RAM_END  = "); print_hex(RAM_END);  hal_console_puts("\r\n");
+  hal_console_puts("  RAM_SIZE = "); print_dec(RAM_SIZE); hal_console_puts(" bytes\r\n");
+
+  hal_console_puts("User Space:\r\n");
+  hal_console_puts("  USER_RAM_BASE = "); print_hex(USER_RAM_BASE); hal_console_puts("\r\n");
+  hal_console_puts("  USER_RAM_END  = "); print_hex(USER_RAM_END);  hal_console_puts("\r\n");
+  hal_console_puts("  USER_RAM_SIZE = "); print_dec(USER_RAM_SIZE); hal_console_puts(" bytes\r\n");
 }
+
+// --- Main shell loop ---
 
 void shell_run(void) {
   char line[128];

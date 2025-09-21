@@ -23,7 +23,9 @@ echo
 # Run QEMU and pipe ALL its output to the 'tee' command.
 # This shows the output on the screen AND saves it to the log file.
 qemu-system-arm \
-  -M lm3s6965evb -cpu cortex-m3 \
+  -M mps2-an385 \
+  -cpu cortex-m3 \
+  -m 16M \
   -nographic \
   -semihosting-config enable=on,target=native \
   -kernel build/OS.elf | tee "$LOG_FILE"

@@ -4,6 +4,7 @@
 void kmain(void) {
   hal_console_init();                     // your UART init
   hal_console_puts("[OS] Boot OK (M0-safe)\r\n");
+  hal_console_puts("hi\r\n");
   shell_run();                            // blocking shell
   for(;;) { /* idle */ }
 }

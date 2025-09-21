@@ -1,55 +1,98 @@
-/*
- * src/linker.ld - CORRECTED
- * Target: lm3s6965evb board with 64MB of custom addon RAM
- */
-
+/* === MPS2-AN385 MEMORY LAYOUT (QEMU Specific) === */
 MEMORY
 {
-  /* FLASH is at the standard location for this board */
-  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 256K
-
-  /* RAM now points to our custom 64MB memory region added in QEMU */
-  RAM (rwx)  : ORIGIN = 0x60000000, LENGTH = 64M
+    /* MPS2-AN385 Flash/ROM */
+    FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 4M
+    
+    /* MPS2-AN385 ZBT SSRAM1 (main RAM) */
+    RAM (rwx)  : ORIGIN = 0x21000000, LENGTH = 4M
+    
+    /* Alternative SRAM regions (if needed) */
+    SRAM2 (rwx) : ORIGIN = 0x20000000, LENGTH = 1M
 }
 
-/* --- Define the Memory Partition --- */
+/* Kernel and User memory split */
 _KERNEL_RAM_START = ORIGIN(RAM);
-
-/* Partition the 64MB RAM. Give the kernel 4MB and the rest to the user process. */
-_KERNEL_RAM_SIZE = 4M;
-_USER_SPACE_SIZE = LENGTH(RAM) - _KERNEL_RAM_SIZE;
+_USER_SPACE_SIZE  = LENGTH(RAM) / 2;        /* 2 MB user */
+_KERNEL_RAM_SIZE  = LENGTH(RAM) - _USER_SPACE_SIZE; /* 2 MB kernel */
 _USER_SPACE_START = _KERNEL_RAM_START + _KERNEL_RAM_SIZE;
 
-/* Set the program's entry point */
+/* Stack pointer - at top of RAM */
+_estack = ORIGIN(RAM) + LENGTH(RAM);
+
+/* End of kernel symbol for C code */
+_kernel_end = _KERNEL_RAM_START + _KERNEL_RAM_SIZE;
+
+/* === ENTRY POINT === */
 ENTRY(Reset_Handler)
 
-/* The kernel's stack will be at the top of its reserved 4MB region */
-_estack = _KERNEL_RAM_START + _KERNEL_RAM_SIZE;
-
+/* === SECTIONS === */
 SECTIONS
 {
-    /* The kernel's code (.text) and initial data values are stored in FLASH. */
-    .text : {
+    /* --- VECTOR TABLE --- */
+    .isr_vector :
+    {
         . = ALIGN(4);
         KEEP(*(.isr_vector))
-        *(.text .text* .rodata .rodata*)
         . = ALIGN(4);
-        _etext = .; /* Symbol marks end of text in FLASH */
+    } > FLASH
+    
+    /* --- TEXT SECTION --- */
+    .text :
+    {
+        . = ALIGN(4);
+        *(.text .text*)
+        *(.rodata .rodata*)
+        
+        /* Constructor/Destructor tables */
+        . = ALIGN(4);
+        __preinit_array_start = .;
+        KEEP(*(.preinit_array*))
+        __preinit_array_end = .;
+        
+        __init_array_start = .;
+        KEEP(*(.init_array*))
+        __init_array_end = .;
+        
+        __fini_array_start = .;
+        KEEP(*(.fini_array*))
+        __fini_array_end = .;
+        
+        . = ALIGN(4);
+        _etext = .;
     } > FLASH
 
-    /*
-     * The data section is loaded from FLASH into our new RAM at boot time.
-     * The BSS section is also created in our new RAM.
-     */
-    .data : AT (ADDR(.text) + SIZEOF(.text)) {
+    /* --- INIT SECTIONS --- */
+    .init :
+    {
+        . = ALIGN(4);
+        KEEP(*(.init))
+        . = ALIGN(4);
+    } > FLASH
+    
+    .fini :
+    {
+        . = ALIGN(4);
+        KEEP(*(.fini))
+        . = ALIGN(4);
+    } > FLASH
+
+    /* --- DATA SECTION (initialized RAM) --- */
+    .data :
+    {
         . = ALIGN(4);
         _sdata = .;
         *(.data .data*)
         . = ALIGN(4);
         _edata = .;
-    } > RAM
+    } > RAM AT> FLASH
+    
+    /* Store the LMA of .data section */
+    _sidata = LOADADDR(.data);
 
-    .bss (NOLOAD) : {
+    /* --- BSS SECTION (zero-initialized RAM) --- */
+    .bss (NOLOAD) :
+    {
         . = ALIGN(4);
         _sbss = .;
         *(.bss .bss*)
@@ -57,16 +100,46 @@ SECTIONS
         . = ALIGN(4);
         _ebss = .;
     } > RAM
+    
+    /* --- HEAP SECTION --- */
+    .heap (NOLOAD) :
+    {
+        . = ALIGN(8);
+        __heap_start__ = .;
+        . = . + 0x1000; /* 4KB heap, adjust as needed */
+        __heap_end__ = .;
+    } > RAM
+    
+    /* --- STACK SECTION --- */
+    .stack (NOLOAD) :
+    {
+        . = ALIGN(8);
+        . = . + 0x1000; /* 4KB stack, adjust as needed */
+        . = ALIGN(8);
+    } > RAM
+
+    /* Discard unwanted sections */
+    /DISCARD/ :
+    {
+        *(.ARM.exidx*)
+        *(.ARM.extab*)
+    }
 }
 
-/* --- Provide Global Symbols for the OS C code --- */
-/*
- * This is the corrected section. These symbols are used by your
- * existing C code (like pmm.c, proc.c, and shell.c) to know the memory map.
- */
+/* --- USER APP RAM REGION --- */
+__app_ram_start__ = _USER_SPACE_START;
+__app_ram_end__   = _USER_SPACE_START + _USER_SPACE_SIZE;
+
+/* --- RAM START/END --- */
 PROVIDE(__ram_start__ = ORIGIN(RAM));
 PROVIDE(__ram_end__   = ORIGIN(RAM) + LENGTH(RAM));
 
-/* These symbols now point to the correct, valid memory region within our 64MB RAM */
-__app_ram_start__ = _USER_SPACE_START;
-__app_ram_end__   = _USER_SPACE_START + _USER_SPACE_SIZE;
+/* --- HEAP/STACK SYMBOLS --- */
+PROVIDE(__heap_start = __heap_start__);
+PROVIDE(__heap_end = __heap_end__);
+
+/* --- DEBUG INFO --- */
+PROVIDE(_flash_start = ORIGIN(FLASH));
+PROVIDE(_flash_size = LENGTH(FLASH));
+PROVIDE(_ram_start = ORIGIN(RAM));
+PROVIDE(_ram_size = LENGTH(RAM));

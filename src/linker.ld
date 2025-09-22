@@ -7,9 +7,9 @@ MEMORY
 
 /* Kernel/User split */
 _KERNEL_RAM_START = ORIGIN(RAM);
-_KERNEL_RAM_SIZE  = LENGTH(RAM)/2;          /* 8 MB kernel */
+_KERNEL_RAM_SIZE  = LENGTH(RAM)/4;          /* 8 MB kernel */
 _USER_SPACE_START = _KERNEL_RAM_START + _KERNEL_RAM_SIZE;
-_USER_SPACE_SIZE  = LENGTH(RAM)/2;          /* 8 MB user */
+_USER_SPACE_SIZE  = 3*LENGTH(RAM)/4;          /* 8 MB user */
 
 /* Minimum stack & heap sizes */
 _Min_Stack_Size = 0x100000; /* 1 MB */

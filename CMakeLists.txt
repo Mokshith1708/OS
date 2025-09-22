@@ -64,11 +64,17 @@ set(LIBUSER_SOURCE_FILES
 add_library(user STATIC ${LIBUSER_SOURCE_FILES})
 
 # We must compile the library with the same Cortex-M0 flags
-# We also add an include directory for the library itself
+# and add include directory for the library itself
 target_include_directories(user PUBLIC src/libuser)
-set_target_properties(user PROPERTIES
-    C_FLAGS "${CMAKE_C_FLAGS}"
-    ASM_FLAGS "${CMAKE_ASM_FLAGS}"
+
+# Apply compile flags properly for C and ASM files
+target_compile_options(user PRIVATE
+    $<$<COMPILE_LANGUAGE:C>:-mcpu=cortex-m0>
+    $<$<COMPILE_LANGUAGE:C>:-mthumb>
+    $<$<COMPILE_LANGUAGE:C>:-ffunction-sections>
+    $<$<COMPILE_LANGUAGE:C>:-fdata-sections>
+    $<$<COMPILE_LANGUAGE:ASM>:-mcpu=cortex-m0>
+    $<$<COMPILE_LANGUAGE:ASM>:-mthumb>
 )
 
 # A message to show where the library is built

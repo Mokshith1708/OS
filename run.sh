@@ -29,7 +29,8 @@ qemu-system-arm \
   -nographic \
   -serial null -serial mon:stdio \
   -semihosting \
-  -kernel build/OS.elf | tee "$LOG_FILE"
+  -kernel build/OS.elf \
+  -S -gdb tcp::1234
 
 echo
 echo "--- QEMU has exited. Full log saved to '$LOG_FILE' ---"

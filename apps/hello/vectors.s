@@ -1,17 +1,13 @@
 .syntax unified
-.cpu cortex-m0
-.thumb
+.cpu cortex-a9
 
-.global Reset_Handler
-
-/* Place vector table at start of RAM */
-.section .vectors, "a", %progbits
-.word _estack             /* initial SP = 0x2000F000 (set by linker) */
-.word Reset_Handler + 1   /* entry PC, Thumb bit set */
+.section .vectors, "a"
+.word _estack           /* Initial Stack Pointer */
+.word _start            /* Reset Handler (PC) */
 
 .text
-.thumb_func
-.global Reset_Handler
-Reset_Handler:
+.global _start
+_start:
+    ldr sp, =_estack
     bl main
 1:  b 1b

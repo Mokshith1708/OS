@@ -6,7 +6,7 @@ OUT_DIR="$APP_DIR/build"
 TOOLS_DIR="$APP_DIR/../../tools"
 mkdir -p "$OUT_DIR"
 
-arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -Os -ffreestanding -nostdlib -nostartfiles \
+arm-none-eabi-gcc -mcpu=cortex-a9 -Os -ffreestanding -nostdlib -nostartfiles \
   -T "$APP_DIR/hello_app.ld" \
   "$APP_DIR/vectors.s" "$APP_DIR/hello_app.c" \
   -o "$OUT_DIR/hello_app.elf"

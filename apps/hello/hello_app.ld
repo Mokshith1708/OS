@@ -94,7 +94,7 @@ SECTIONS
   /* Provide start and end addresses for the application RAM */
   __app_ram_start__ = ORIGIN(ps7_ddr_user);
   __app_ram_end__   = ORIGIN(ps7_ddr_user) + LENGTH(ps7_ddr_user);
-
+  _estack = _stack_start;
   /* User space size */
   _user_space_size = __app_ram_end__ - __app_ram_start__;
 }

@@ -78,7 +78,7 @@ void start_process(const char *path) {
 
     // --- SET THE VECTOR TABLE AND JUMP ---
     CORTEX_M3_VTOR = APP_BASE;
-    uint32_t final_entry = entry | 1;
+    uint32_t final_entry = entry;
 
     hal_console_puts("About to jump:\r\n");
     hal_console_puts(" SP="); hal_console_put_hex(sp); hal_console_puts("\r\n");

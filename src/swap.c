@@ -47,7 +47,7 @@ int swap_in(const char *path, uint32_t *entry, uint32_t *sp)
     hal_console_puts("swap_in: opening '");
     hal_console_puts(path);
     hal_console_puts("'\r\n");
-    int fd = sh_open(path, 0);
+    int fd = sh_open(path, 1);
     if (fd < 0)
     {
         hal_console_puts("swap_in: sh_open FAILED\r\n");
@@ -84,6 +84,8 @@ int swap_in(const char *path, uint32_t *entry, uint32_t *sp)
     {
         sh_close(fd);
         hal_console_puts("swap_in: too big\r\n");
+        hal_console_put_int(APP_SIZE);
+        hal_console_puts(" is too small\r\n");
         return -3;
     }
 

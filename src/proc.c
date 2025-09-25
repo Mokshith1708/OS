@@ -86,10 +86,10 @@ void start_process(const char *path) {
     hal_console_puts(" VTOR="); hal_console_put_hex(APP_BASE); hal_console_puts("\r\n");
 
     __asm__ volatile (
-        "cpsid i\n"
-        "msr msp, %0\n"
-        "isb\n"
-        "bx %1\n"
+        "cpsid if\n"            // Disable IRQ and FIQ interrupts
+        "mov sp, %0\n"          // Set stack pointer to the value in %0
+        "isb\n"                 // Instruction Synchronization Barrier
+        "bx %1\n"               // Branch to final_entry (address in %1)
         : : "r"(sp), "r"(final_entry) : "memory"
     );
 

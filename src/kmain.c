@@ -7,7 +7,8 @@
 #include "xil_cache.h"
 #include "xgpiops.h"
 #include "xsdps.h"
-#include "hal/hal_console.h"
+// #include "hal/hal_console.h"
+#include "drivers/driver.h"
 #include "shell.h"
 #include "ff.h"
 
@@ -51,7 +52,8 @@ int main()
 
     XGpioPs_WritePin(&Gpio, GPIO_RESET_PIN, 1);
 
-    hal_console_init(); // Initialize UART
+    // hal_console_init(); // Initialize UART
+    console_init(Buffer); // Initialize framebuffer for console
 
     // Initialize SD card
 

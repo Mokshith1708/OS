@@ -58,3 +58,56 @@ This project is divided into sequential modules. This section documents the work
 5.  **Execute the script:** `./run.sh`
 
 The script will automatically compile the kernel and launch it in the QEMU emulator. The milestone output will be printed to your terminal.
+
+
+
+# Module – 3
+
+This document summarizes the work completed in **Module Three**, including design changes, debugging, and implementation tasks. Contributions have been divided between **Mokshith** and **Kalyan**.
+
+---
+
+## Overview
+Module Three focused on:
+- Memory layout adjustments and linker fixes  
+- Transition from UART to semihosting  
+- Verification of semihosting functionality  
+- Incremental debugging and issue resolution  
+
+---
+
+## Contributions
+
+### Mokshith
+- Implemented **semihosting integration**, replacing UART-based communication.  
+- Debugged and fixed multiple memory layout inconsistencies.  
+- Modified the **board and linker configuration** to ensure proper memory allotment.  
+- Verified that semihosting was functioning correctly through testing.  
+- Incremental refinements and updates to codebase (multiple commits).  
+
+### Kalyan
+- Supported integration by testing the semihosting implementation on different setups.  
+- Reviewed linker and memory allocation changes for compatibility.  
+- Worked on debugging issues that arose from replacing UART with semihosting.  
+- Assisted in finalizing stable commit history and resolving build errors.  
+- Contributed to documentation and validation of changes.  
+
+---
+
+## Key Outcomes
+- **UART → Semihosting transition** completed successfully.  
+- **Linker memory allotment** updated to avoid conflicts and runtime errors.  
+- Codebase is now stable with functional semihosting support.  
+
+---
+
+## Next Steps
+- Further optimize memory usage across modules.  
+- Improve documentation for linker script and semihosting setup.  
+- Explore advanced debugging mechanisms for future modules.  
+
+---
+
+**Contributors:**  
+- Mokshith  
+- Kalyan  

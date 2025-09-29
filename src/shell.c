@@ -54,7 +54,7 @@ static void cmd_meminfo(void) {
 
 void shell_run(void) {
   char line[128];
-  hal_console_puts("\r\n[OS] UART shell ready. Type 'help'.\r\n");
+  hal_console_puts("[OS] UART shell ready Type 'help'\n");
   for (;;) {
     hal_console_puts("os> ");
     int n = readline(line, sizeof(line));

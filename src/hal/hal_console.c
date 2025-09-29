@@ -1,6 +1,7 @@
 /* hal_console.c - Semihosting console for MPS2-QEMU */
 #include "hal_console.h"
 #include "../semihost.h"
+#include "../drivers/driver.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include "xuartps.h"
@@ -32,21 +33,25 @@ void hal_console_init(void) {
 /* Send a single character */
 void hal_console_putc(char c) {
     xil_printf("%c",c);
+    console_putc(c);
 }
 
 /* Send a null-terminated string */
 void hal_console_puts(const char *s) {
     xil_printf("%s",s);
+    console_puts(s);
 }
 
 /* Print an integer in decimal */
 void hal_console_put_int(int n) {
     xil_printf("%d",n);
+    console_put_int(n);
 }
 
 /* Print an unsigned integer in hexadecimal */
 void hal_console_put_hex(uint32_t n) {
     xil_printf("%x",n);
+    console_put_hex(n);
 }
 
 /* Read a single character (blocking) */

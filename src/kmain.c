@@ -7,7 +7,7 @@
 #include "xil_cache.h"
 #include "xgpiops.h"
 #include "xsdps.h"
-// #include "hal/hal_console.h"
+#include "hal/hal_console.h"
 #include "drivers/driver.h"
 #include "shell.h"
 #include "ff.h"
@@ -22,7 +22,8 @@
 static XScuGic Intc;
 
 static int SetupIntrSystem(XAxiVdma *AxiVdmaPtr, u16 ReadIntrId);
-unsigned char Buffer[FrameSize];
+
+volatile unsigned char Buffer[FrameSize];
 __attribute__((section(".frame_buffer"))) int drawImage(u32 displayHSize, u32 displayVSize, u32 imageHSize, u32 imageVSize, u32 hOffset, u32 vOffset, char *imagePointer);
 
 XGpioPs Gpio;
@@ -52,7 +53,7 @@ int main()
 
     XGpioPs_WritePin(&Gpio, GPIO_RESET_PIN, 1);
 
-    // hal_console_init(); // Initialize UART
+    hal_console_init(); // Initialize UART
     console_init(Buffer); // Initialize framebuffer for console
 
     // Initialize SD card
@@ -63,13 +64,13 @@ int main()
     if (!sd_config)
     {
         xil_printf("SD lookup config failed\n");
-        return XST_FAILURE;
+//        return XST_FAILURE;
     }
     status = XSdPs_CfgInitialize(&SdInstance, sd_config, sd_config->BaseAddress);
     if (status != XST_SUCCESS)
     {
         xil_printf("SD initialization failed\n");
-        return status;
+//        return status;
     }
 
     // Optionally power on SD card and setup clocks if needed
@@ -79,7 +80,7 @@ int main()
     if (res != FR_OK)
     {
         xil_printf("Failed to mount filesystem. FatFs error = %d\n", res);
-        return XST_FAILURE;
+//        return XST_FAILURE;
     }
 
     xil_printf("SD card mounted successfully\n");
@@ -141,6 +142,43 @@ int main()
         return XST_FAILURE;
     }
 
+    // Initialize PS2
+//    axi_ps2_Config *ConfigPtr;
+//
+//    ConfigPtr = axi_ps2_LookupConfig(XPAR_AXI_PS2_0_DEVICE_ID);
+//    if (ConfigPtr == NULL) {
+//    	return XST_FAILURE;
+//    }
+//    axi_ps2_CfgInitialize(&Ps2Inst, ConfigPtr, ConfigPtr->BaseAddress);
+//
+//    XScuGic Intc;
+//    XScuGic_Config *IntcConfig;
+//
+//    IntcConfig = XScuGic_LookupConfig(XPAR_PS7_SCUGIC_0_DEVICE_ID);
+//    if (XScuGic_CfgInitialize(&Intc, IntcConfig, IntcConfig->CpuBaseAddress) != XST_SUCCESS) {
+//        xil_printf("Interrupt controller initialization failed\n");
+//        return XST_FAILURE;
+//    }
+//    int Status;
+//    Status = XScuGic_Connect(&Intc, XPAR_FABRIC_AXI_PS2_0_PS2_INTERRUPT_INTR,
+//                             (Xil_InterruptHandler)axi_ps2_IntrHandler,
+//                             &Ps2Inst);
+//    if (Status != XST_SUCCESS) {
+//        xil_printf("PS/2 Interrupt connection failed\n");
+//        return XST_FAILURE;
+//    }
+//
+//    XScuGic_Enable(&Intc, XPAR_FABRIC_AXI_PS2_0_PS2_INTERRUPT_INTR);
+//
+//    axi_ps2_SetHandler(&Ps2Inst, PS2_InterruptHandler, &Ps2Inst);
+//
+//    axi_ps2_IntrEnable(&Ps2Inst, axi_ps2_IPIXR_RX_ALL);  // Enable receive interrupts
+//
+//    axi_ps2_IntrGlobalEnable(&Ps2Inst); // Enable global interrupt in the IP
+//
+
+
+
     shell_run(); //  never return
     while (1)
     {
@@ -152,74 +190,6 @@ int main()
  ******************************************************************************/
 static void ReadCallBack(void *CallbackRef, u32 Mask)
 {
-    // Box size
-    const int boxWidth = 80;
-    const int boxHeight = 60;
-
-    // Static variables to hold box position and velocity
-    static int boxX = 0;
-    static int boxY = 0;
-    static int velX = 5; // pixels per frame
-    static int velY = 5;
-    static int prevBoxX = 0;
-    static int prevBoxY = 0;
-
-    // Move the box position
-    boxX += velX;
-    boxY += velY;
-
-    // Bounce off edges
-    if (boxX < 0)
-    {
-        boxX = 0;
-        velX = -velX;
-    }
-    else if (boxX + boxWidth >= HSize)
-    {
-        boxX = HSize - boxWidth - 1;
-        velX = -velX;
-    }
-
-    if (boxY < 0)
-    {
-        boxY = 0;
-        velY = -velY;
-    }
-    else if (boxY + boxHeight >= VSize)
-    {
-        boxY = VSize - boxHeight - 1;
-        velY = -velY;
-    }
-
-    // Clear entire screen black first
-
-    // Draw gradient box at current position
-    for (int y = prevBoxY; y < prevBoxY + boxHeight; y++)
-    {
-        for (int x = prevBoxX; x < prevBoxX + boxWidth; x++)
-        {
-            int idx = (y * HSize + x) * 3;
-            Buffer[idx] = 0x00;
-            Buffer[idx + 1] = 0x00;
-            Buffer[idx + 2] = 0x00;
-        }
-    }
-
-    // Draw new box
-    for (int y = boxY; y < boxY + boxHeight; y++)
-    {
-        for (int x = boxX; x < boxX + boxWidth; x++)
-        {
-            int idx = (y * HSize + x) * 3;
-            Buffer[idx] = (u8)(((x - boxX) * 32) / (boxWidth - 1));
-            Buffer[idx + 1] = (u8)(((y - boxY) * 64) / (boxHeight - 1));
-            Buffer[idx + 2] = 0x00;
-        }
-    }
-
-    prevBoxX = boxX;
-    prevBoxY = boxY;
-
     Xil_DCacheFlushRange((INTPTR)Buffer, FrameSize);
 }
 
@@ -265,3 +235,4 @@ static int SetupIntrSystem(XAxiVdma *AxiVdmaPtr, u16 ReadIntrId)
 
     return XST_SUCCESS;
 }
+

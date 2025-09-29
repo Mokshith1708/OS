@@ -8,7 +8,7 @@ static int cursor_x = 0;
 static int cursor_y = 0;
 
 // framebuffer pointer (set by init)
-static uint8_t *framebuffer = 0;
+static volatile uint8_t *framebuffer = 0;
 
 // initialize console
 void console_init(uint8_t *fb) {
@@ -43,8 +43,8 @@ void console_putc(char c) {
     if (c == '\n') {
         cursor_x = 0;
         cursor_y++;
-    } else if (c == '\r') {
-        cursor_x = 0;
+//    } else if (c == '\r') {
+        // lets ignore
     } else {
         if (c < 32 || c > 126) return; // ignore non-printable
 
@@ -55,7 +55,8 @@ void console_putc(char c) {
         for (int row = 0; row < CHAR_H; row++) {
             uint8_t bits = font8x8_basic[ch][row];
             for (int col = 0; col < CHAR_W; col++) {
-                uint8_t val = (bits & (1 << (7 - col))) ? 0xFF : 0x00;
+                uint8_t val = (bits & (1 << (col))) ? 0xFF : 0x00;
+
 
                 int pixel_x = col_offset + col;
                 int pixel_y = row_offset + row;
@@ -81,8 +82,6 @@ void console_putc(char c) {
         console_scroll();
     }
 
-    // Optional: flush cache if using VDMA
-    // Xil_DCacheFlushRange((INTPTR)framebuffer, SCREEN_H_PIXELS * SCREEN_V_PIXELS * 3);
 }
 
 // print string

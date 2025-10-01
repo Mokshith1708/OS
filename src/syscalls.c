@@ -1,70 +1,54 @@
-// src/syscalls.c
+#include <stdint.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <errno.h>
-#include <unistd.h>
-
-// Include your own HAL header for character output
 #include "hal/hal_console.h"
 
-#undef errno
-extern int errno;
+extern int _write(int file, char *ptr, int len);
+extern int _read(int file, char *ptr, int len);
+extern void *_sbrk(int incr);
+extern int _close(int file);
+extern int _fstat(int file, struct stat *st);
+extern int _isatty(int file);
+extern int _lseek(int file, int ptr, int dir);
+extern void _exit(int code);
+extern int _kill(int pid, int sig);
+extern int _getpid(void);
 
-// This function is called by printf, puts, etc. to write characters.
-// We redirect its output to our console driver.
-int _write(int file, char *ptr, int len) {
-    // We only handle stdout (file descriptor 1) and stderr (2)
-    if (file != 1 && file != 2) {
-        errno = EBADF;
-        return -1;
+typedef int (*syscall_fn_t)(uint32_t, uint32_t, uint32_t);
+
+static int sys_exit(uint32_t code, uint32_t unused1, uint32_t unused2) { _exit(code); return 0; }
+static int sys_write(uint32_t file, uint32_t ptr, uint32_t len) { return _write(file, (char*)ptr, len); }
+static int sys_read(uint32_t file, uint32_t ptr, uint32_t len) { return _read(file, (char*)ptr, len); }
+static int sys_sbrk(uint32_t incr, uint32_t unused1, uint32_t unused2) { return (int)_sbrk(incr); }
+static int sys_close(uint32_t file, uint32_t unused1, uint32_t unused2) { return _close(file); }
+static int sys_fstat(uint32_t file, uint32_t st, uint32_t unused2) { return _fstat(file, (void*)st); }
+static int sys_isatty(uint32_t file, uint32_t unused1, uint32_t unused2) { return _isatty(file); }
+static int sys_lseek(uint32_t file, uint32_t ptr, uint32_t dir) { return _lseek(file, ptr, dir); }
+static int sys_kill(uint32_t pid, uint32_t sig, uint32_t unused2) { return _kill(pid, sig); }
+static int sys_getpid(uint32_t unused1, uint32_t unused2, uint32_t unused3) { return _getpid(); }
+
+static syscall_fn_t syscall_table[] = {
+    sys_exit,    // 0
+    sys_write,   // 1
+    sys_read,    // 2
+    sys_sbrk,    // 3
+    sys_close,   // 4
+    sys_fstat,   // 5
+    sys_isatty,  // 6
+    sys_lseek,   // 7
+    sys_kill,    // 8
+    sys_getpid,  // 9
+    // Add more as needed
+};
+
+void syscall_dispatch(uint32_t *stack) {
+    uint32_t svc_num;
+    // SVC number is in the instruction at stacked PC - 2
+    uint32_t pc = stack[6];
+    uint16_t svc_instr = *((uint16_t *)(pc - 2));
+    svc_num = svc_instr & 0xFF;
+
+    if (svc_num < sizeof(syscall_table)/sizeof(syscall_table[0])) {
+        int ret = syscall_table[svc_num](stack[0], stack[1], stack[2]);
+        stack[0] = ret; // Return value in r0
     }
-    int i;
-    for (i = 0; i < len; i++) {
-        hal_console_putc(ptr[i]);
-    }
-    return len;
 }
-
-// _sbrk is used by malloc to request more memory.
-// We need a simple heap implementation for the kernel itself.
-void *_sbrk(int incr) {
-    extern char _kernel_end; // Symbol from linker script marking end of kernel .bss
-    static char *heap_end = &_kernel_end;
-    extern char _estack; // Symbol for the top of our kernel stack
-
-    char *prev_heap_end = heap_end;
-
-    if (heap_end + incr > &_estack) {
-        // Heap and stack collision
-        errno = ENOMEM;
-        return (void *)-1;
-    }
-
-    heap_end += incr;
-    return (void *)prev_heap_end;
-}
-
-// _exit is called when a program (or the kernel) calls exit().
-// For now, it just prints a message and halts the CPU.
-void _exit(int status) {
-    hal_console_puts("\n--- System Halted ---\n");
-    (void)status;
-    while (1) {
-        // Infinite loop to halt execution
-    }
-}
-
-// The rest of these are stubs for file and process operations.
-// We return error codes because our OS does not yet support them.
-int _close(int file) { (void)file; errno = EBADF; return -1; }
-int _fstat(int file, struct stat *st) { (void)file; st->st_mode = S_IFCHR; return 0; }
-int _isatty(int file) { (void)file; return 1; }
-int _lseek(int file, int ptr, int dir) { (void)file; (void)ptr; (void)dir; return 0; }
-int _read(int file, char *ptr, int len) { (void)file; (void)ptr; (void)len; return 0; }
-int _open(const char *name, int flags, int mode) { (void)name; (void)flags; (void)mode; errno = ENOSYS; return -1; }
-int _kill(int pid, int sig) { (void)pid; (void)sig; errno = EINVAL; return -1; }
-int _getpid(void) { return 1; }
-
-// Dummy implementations for other functions that might be required.
-int _gettimeofday(struct timeval *tv, void *tz) { (void)tv; (void)tz; return 0; }

@@ -100,7 +100,11 @@ BusFault_Handler:   b Default_Handler
 .thumb_func
 UsageFault_Handler: b Default_Handler
 .thumb_func
-SVC_Handler:        b Default_Handler
+SVC_Handler:
+    /* On entry, user registers are stacked at SP */
+    mov r0, sp
+    bl syscall_dispatch
+    bx lr
 .thumb_func
 DebugMon_Handler:   b Default_Handler
 .thumb_func

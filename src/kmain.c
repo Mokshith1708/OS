@@ -11,6 +11,8 @@
 #include "drivers/driver.h"
 #include "shell.h"
 #include "ff.h"
+#include "axi_ps2.h"
+#include "keyboard.h"
 
 #define HSize 1920
 #define VSize 1080
@@ -22,6 +24,7 @@
 static XScuGic Intc;
 
 static int SetupIntrSystem(XAxiVdma *AxiVdmaPtr, u16 ReadIntrId);
+void PS2_InterruptHandler(void *CallBackRef);
 
 volatile unsigned char Buffer[FrameSize];
 __attribute__((section(".frame_buffer"))) int drawImage(u32 displayHSize, u32 displayVSize, u32 imageHSize, u32 imageVSize, u32 hOffset, u32 vOffset, char *imagePointer);
@@ -29,6 +32,8 @@ __attribute__((section(".frame_buffer"))) int drawImage(u32 displayHSize, u32 di
 XGpioPs Gpio;
 FATFS fatfs;
 FRESULT res;
+static axi_ps2 Ps2Inst;
+//static XScuGic Intc;
 
 int main()
 {
@@ -143,39 +148,39 @@ int main()
     }
 
     // Initialize PS2
-//    axi_ps2_Config *ConfigPtr;
-//
-//    ConfigPtr = axi_ps2_LookupConfig(XPAR_AXI_PS2_0_DEVICE_ID);
-//    if (ConfigPtr == NULL) {
-//    	return XST_FAILURE;
-//    }
-//    axi_ps2_CfgInitialize(&Ps2Inst, ConfigPtr, ConfigPtr->BaseAddress);
-//
-//    XScuGic Intc;
-//    XScuGic_Config *IntcConfig;
-//
-//    IntcConfig = XScuGic_LookupConfig(XPAR_PS7_SCUGIC_0_DEVICE_ID);
-//    if (XScuGic_CfgInitialize(&Intc, IntcConfig, IntcConfig->CpuBaseAddress) != XST_SUCCESS) {
-//        xil_printf("Interrupt controller initialization failed\n");
-//        return XST_FAILURE;
-//    }
-//    int Status;
-//    Status = XScuGic_Connect(&Intc, XPAR_FABRIC_AXI_PS2_0_PS2_INTERRUPT_INTR,
-//                             (Xil_InterruptHandler)axi_ps2_IntrHandler,
-//                             &Ps2Inst);
-//    if (Status != XST_SUCCESS) {
-//        xil_printf("PS/2 Interrupt connection failed\n");
-//        return XST_FAILURE;
-//    }
-//
-//    XScuGic_Enable(&Intc, XPAR_FABRIC_AXI_PS2_0_PS2_INTERRUPT_INTR);
-//
-//    axi_ps2_SetHandler(&Ps2Inst, PS2_InterruptHandler, &Ps2Inst);
-//
-//    axi_ps2_IntrEnable(&Ps2Inst, axi_ps2_IPIXR_RX_ALL);  // Enable receive interrupts
-//
-//    axi_ps2_IntrGlobalEnable(&Ps2Inst); // Enable global interrupt in the IP
-//
+    axi_ps2_Config *ConfigPtr;
+
+    ConfigPtr = axi_ps2_LookupConfig(XPAR_AXI_PS2_0_DEVICE_ID);
+    if (ConfigPtr == NULL) {
+    	return XST_FAILURE;
+    }
+    axi_ps2_CfgInitialize(&Ps2Inst, ConfigPtr, ConfigPtr->BaseAddress);
+
+    XScuGic Intc;
+    XScuGic_Config *IntcConfig;
+
+    IntcConfig = XScuGic_LookupConfig(XPAR_PS7_SCUGIC_0_DEVICE_ID);
+    if (XScuGic_CfgInitialize(&Intc, IntcConfig, IntcConfig->CpuBaseAddress) != XST_SUCCESS) {
+        xil_printf("Interrupt controller initialization failed\n");
+        return XST_FAILURE;
+    }
+    int Status;
+    Status = XScuGic_Connect(&Intc, XPAR_FABRIC_AXI_PS2_0_PS2_INTERRUPT_INTR,
+                             (Xil_InterruptHandler)axi_ps2_IntrHandler,
+                             &Ps2Inst);
+    if (Status != XST_SUCCESS) {
+        xil_printf("PS/2 Interrupt connection failed\n");
+        return XST_FAILURE;
+    }
+
+    XScuGic_Enable(&Intc, XPAR_FABRIC_AXI_PS2_0_PS2_INTERRUPT_INTR);
+
+    axi_ps2_SetHandler(&Ps2Inst, PS2_InterruptHandler, &Ps2Inst);
+
+    axi_ps2_IntrEnable(&Ps2Inst, axi_ps2_IPIXR_RX_ALL);  // Enable receive interrupts
+
+    axi_ps2_IntrGlobalEnable(&Ps2Inst); // Enable global interrupt in the IP
+
 
 
 
@@ -234,5 +239,15 @@ static int SetupIntrSystem(XAxiVdma *AxiVdmaPtr, u16 ReadIntrId)
     XAxiVdma_SetCallBack(AxiVdmaPtr, XAXIVDMA_HANDLER_ERROR, ReadErrorCallBack, (void *)AxiVdmaPtr, XAXIVDMA_READ);
 
     return XST_SUCCESS;
+}
+
+void PS2_InterruptHandler(void *CallBackRef)
+{
+    axi_ps2 *InstancePtr = (axi_ps2 *)CallBackRef;
+    u32 Data;
+
+    axi_ps2_Recv(InstancePtr, &Data, 1);
+
+    PS2_ScanCodeHandler(Data);
 }
 

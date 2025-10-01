@@ -7,6 +7,8 @@
 #include "xuartps.h"
 XUartPs Uart_PS;
 
+volatile char *keyboard=(volatile unsigned int*)0x1180AA;
+
 void hal_console_init(void) {
 	int status;
 	XUartPs_Config *Config;
@@ -56,8 +58,8 @@ void hal_console_put_hex(uint32_t n) {
 
 /* Read a single character (blocking) */
 int hal_console_getchar(void) {
-	u8 recv_char=0;
-	int status;
-	status = XUartPs_Recv(&Uart_PS, &recv_char, 1);
-    return (int)recv_char;
+	while(!*keyboard){}
+	char t = *keyboard;
+	*keyboard = 0;
+    return (int)t;
 }

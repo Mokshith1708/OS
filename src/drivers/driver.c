@@ -43,19 +43,34 @@ void console_putc(char c) {
     if (c == '\n') {
         cursor_x = 0;
         cursor_y++;
-//    } else if (c == '\r') {
-        // lets ignore
+    } if (c == '\b') {
+    	// clear :)
+        cursor_x--;
+        int row_offset = cursor_y * CHAR_H;
+        int col_offset = cursor_x * CHAR_W;
+    	for (int row = 0; row < CHAR_H; row++){
+        	for (int col = 0;col < CHAR_W; col++){
+        		int pixel_x = col_offset + col;
+        		int pixel_y = row_offset + row;
+        		if (pixel_x >= SCREEN_H_PIXELS || pixel_y >= SCREEN_V_PIXELS)
+        			continue;
+        		int idx = (pixel_y * SCREEN_H_PIXELS + pixel_x) * 3;
+        		framebuffer[idx + 0] = 0;
+        		framebuffer[idx + 1] = 0;
+        		framebuffer[idx + 2] = 0;
+        	}
+        }
     } else {
         if (c < 32 || c > 126) return; // ignore non-printable
 
-        int ch = c - 32;
+        int ch = c;
         int row_offset = cursor_y * CHAR_H;
         int col_offset = cursor_x * CHAR_W;
 
         for (int row = 0; row < CHAR_H; row++) {
-            uint8_t bits = font8x8_basic[ch][row];
+            uint8_t bits = font8x16[ch][row];
             for (int col = 0; col < CHAR_W; col++) {
-                uint8_t val = (bits & (1 << (col))) ? 0xFF : 0x00;
+                uint8_t val = (bits & (0x80 >> col)) ? 0xFF : 0x00;
 
 
                 int pixel_x = col_offset + col;

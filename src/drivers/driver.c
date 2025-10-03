@@ -17,7 +17,7 @@ void console_init(uint8_t *fb) {
     cursor_y = 0;
 
     // Clear screen
-    memset(framebuffer, 0x00, SCREEN_H_PIXELS * SCREEN_V_PIXELS * 3);
+    memset(framebuffer, 0x00, SCREEN_H_PIXELS * SCREEN_V_PIXELS * 3); // Each pixel is 3 bytes (RGB); Each colour takes 1 byte (0-255)
 }
 
 // scroll the framebuffer up by one line (CHAR_H pixels)
@@ -52,32 +52,38 @@ void console_putc(char c) {
         int row_offset = cursor_y * CHAR_H;
         int col_offset = cursor_x * CHAR_W;
 
-        for (int row = 0; row < CHAR_H; row++) {
+        for (int row = 0; row < 8; row++) { // raw font is always 8 rows
             uint8_t bits = font8x8_basic[ch][row];
-            for (int col = 0; col < CHAR_W; col++) {
-                uint8_t val = (bits & (1 << (7 - col))) ? 0xFF : 0x00;
+            for (int col = 0; col < 8; col++) { // raw font is always 8 cols
+                // uint8_t val = (bits & (1 << (7 - col))) ? 0xFF : 0x00; // bit 0 => leftmost pixel
+                uint8_t val = (bits & (1 << col)) ? 0xFF : 0x00; // // bit 7 => leftmost pixel; check this once
 
-                int pixel_x = col_offset + col;
-                int pixel_y = row_offset + row;
+                // expand each font pixel into SCALE×SCALE block
+                for (int sy = 0; sy < SCALE; sy++) {
+                    for (int sx = 0; sx < SCALE; sx++) {
+                        int pixel_x = col_offset + col * SCALE + sx;
+                        int pixel_y = row_offset + row * SCALE + sy;
 
-                if (pixel_x >= SCREEN_H_PIXELS || pixel_y >= SCREEN_V_PIXELS)
-                    continue;
+                        if (pixel_x >= SCREEN_H_PIXELS || pixel_y >= SCREEN_V_PIXELS)
+                            continue;
 
-                int idx = (pixel_y * SCREEN_H_PIXELS + pixel_x) * 3;
-                framebuffer[idx + 0] = val;
-                framebuffer[idx + 1] = val;
-                framebuffer[idx + 2] = val;
+                        int idx = (pixel_y * SCREEN_H_PIXELS + pixel_x) * 3;
+                        framebuffer[idx + 0] = val;
+                        framebuffer[idx + 1] = val;
+                        framebuffer[idx + 2] = val;
+                    }
+                }
             }
         }
 
         cursor_x++;
-        if (cursor_x >= COLS) {
-            cursor_x = 0;
+        if (cursor_x >= COLS) { // COLS must already be SCREEN_H_PIXELS / CHAR_W
+            cursor_x = 0; 
             cursor_y++;
         }
     }
 
-    if (cursor_y >= ROWS) {
+    if (cursor_y >= ROWS) { // ROWS must already be SCREEN_V_PIXELS / CHAR_H
         console_scroll();
     }
 

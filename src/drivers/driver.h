@@ -3,8 +3,9 @@
 
 #define SCREEN_H_PIXELS 1920
 #define SCREEN_V_PIXELS 1080
-#define CHAR_W 8
-#define CHAR_H 8
+#define SCALE 2
+#define CHAR_W (8 * SCALE)
+#define CHAR_H (8 * SCALE)
 #define COLS (SCREEN_H_PIXELS / CHAR_W)
 #define ROWS (SCREEN_V_PIXELS / CHAR_H)
 

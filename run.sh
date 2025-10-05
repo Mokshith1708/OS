@@ -16,9 +16,9 @@ echo "--- Build complete ---"
 
 echo
 echo "--- Starting QEMU ---"
-echo "The FULL output, including the memory dump, will be saved to the file: '$LOG_FILE'"
-echo "Interact with QEMU as normal. Quit with [Ctrl]+[A], then [X]"
-echo
+# echo "The FULL output, including the memory dump, will be saved to the file: '$LOG_FILE'"
+# echo "Interact with QEMU as normal. Quit with [Ctrl]+[A], then [X]"
+# echo
 
 # Run QEMU and pipe ALL its output to the 'tee' command.
 # This shows the output on the screen AND saves it to the log file.
@@ -30,7 +30,7 @@ qemu-system-arm \
   -serial null -serial mon:stdio \
   -semihosting \
   -kernel build/OS.elf \
-  -S -gdb tcp::1234
+  # -S -gdb tcp::1234
 
 echo
 echo "--- QEMU has exited. Full log saved to '$LOG_FILE' ---"

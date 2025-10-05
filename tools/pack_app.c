@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+// #define USER_RAM_SIZE 0xC00000 
+#define USER_RAM_SIZE 0xC00000
+#define RAM_ORIGIN    0x20400000
+#define SP_HEADROOM   0x100  // leave 256 bytes free
+#define USER_RAM_TOP  (RAM_ORIGIN + USER_RAM_SIZE)
+
 
 typedef struct {
     uint32_t ram_size;
@@ -40,7 +46,9 @@ int main(int argc, char **argv) {
 
     proc_img_hdr_t hdr = {0};
     hdr.ram_size   = (uint32_t)sz;
-    hdr.initial_sp = vt[0];   /* first word = stack pointer */
+    // hdr.ram_size   = USER_RAM_SIZE; /* fixed RAM size for all apps */
+    // hdr.initial_sp = vt[0];   /* first word = stack pointer */
+    hdr.initial_sp = USER_RAM_TOP - SP_HEADROOM;
     hdr.entry_pc   = vt[1];   /* second word = reset handler (with Thumb bit) */
     hdr.flags      = 0;
 

@@ -25,6 +25,7 @@ set(SOURCE_FILES
     src/jump_trampoline.s
     src/syscalls.c
     src/fault.c
+    tools/pack_app.c
 )
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/src/linker.ld)
 

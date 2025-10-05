@@ -30,6 +30,7 @@
 
 #include "hal/hal_console.h"
 #include "shell.h"
+#include "proc.h"
 
 void kmain(void) {
   hal_console_init();                     // your UART init
@@ -40,8 +41,8 @@ void kmain(void) {
   // debug_step();   
 
   hal_console_puts("Testing 123\r\n");
-
-  shell_run();                            // blocking shell
+  start_process("/home/mokshith/Desktop/OS/vm.proc");
+  // shell_run();                            // blocking shell
   for(;;) { /* idle */ }
 }
 

@@ -1,113 +1,137 @@
-# OS
+# OS: A Custom Kernel and Operating System
 
-**Version:** 1.0 (Milestone M2 Complete)
+**Version:** 2.0 (Milestone M7)
+**Status:** In Development (Core Features Implemented)
 
-**Status:** In Development
+## Overview
 
-## Current Status
+OS is a from-scratch operating system kernel built to run on an emulated ARM platform using QEMU. The project's goal is to implement a complete operating system stack, including a custom bootloader, kernel, memory and process managers, hardware drivers, a system call interface, and an interactive shell. A key objective is to create a platform capable of running a virtual machine.
 
-This document reflects the successful completion of the first two development modules. The kernel now has a stable boot process, a robust hardware abstraction layer for console I/O, and a functional physical memory manager. The system boots from a simulated FLASH memory and correctly reports its own memory layout.
+This document outlines the project's development chronologically across seven major modules.
 
-**Demonstrable Milestone Achieved (M2):**
-Project OS Kernel Initialized.
+## Features
 
---- Module 2 Test ---
+*   **Custom Bootloader:** Low-level startup code to initialize the ARM environment.
+*   **Physical & Virtual Memory Management:** Manages the system's memory map, isolates kernel/user space, and includes foundational paging support.
+*   **Process Management:** A high-level scheduler and process manager capable of loading and executing user-space applications.
+*   **System Call Interface:** A robust mechanism for user-space applications to request kernel services.
+*   **Hardware Drivers:** Support for console I/O (Framebuffer and Semihosting), keyboard, and block devices (SD Card).
+*   **Interactive Shell:** A command-line interface for user interaction and program execution.
+*   **Advanced Debugging:** A custom fault handler to capture and diagnose system crashes.
+*   **Integrated Build System:** Uses CMake and custom scripts for automated cross-compilation and execution in QEMU.
 
-User space available: 32KB at 0x20008000
+## Getting Started
+
+### Prerequisites
+
+You must have the following tools installed and available in your system's PATH:
+
+*   **CMake:** For building the project.
+*   **Make:** The build utility used by CMake.
+*   **QEMU:** Specifically `qemu-system-arm` for emulating the target hardware.
+*   **ARM GCC Toolchain:** `arm-none-eabi-gcc` and its related tools for cross-compiling.
+
+### Build and Run
+
+1.  **Clone the repository:**
+    ```sh
+    git clone <your-repository-url>
+    cd os-project
+    ```
+2.  **Make the run script executable:**
+    ```sh
+    chmod +x run.sh
+    ```
+3.  **Execute the script:**
+    ```sh
+    ./run.sh
+    ```
+The script will compile the kernel and all related components, then launch it within the QEMU emulator.
 
 ---
 
 ## Development Modules & Work Distribution
 
-This project is divided into sequential modules. This section documents the work completed and attributes it to the responsible team members.
+This project was developed in sequential modules. This section documents the goals and work completed by each team member.
 
-### Module 1: Foundational Setup, Boot, and Kernel Entry
+### Module 1: Foundational Setup and Kernel Boot
 
-**Goal:** Get the system to boot, set up a C environment, and print a "Kernel Initialized" message.
+**Goal:** Establish the QEMU simulation environment, boot the system, set up a C environment, and begin work on process management.
 **Status:** **COMPLETE**
 
-| Role | Team Member | Work Completed | Code/Files Contributed |
-| :--- | :--- | :--- | :--- |
-| **A: HAL & Low-Level** | T Mokshith Reddy | Wrote the initial Cortex-M processor startup file (`boot.s`), which includes the vector table, memory initialization logic (copying `.data` and zeroing `.bss`), and the jump to the C kernel entry point. | `src/boot.s` |
-| **B: Kernel Logic** | Sasaank | Wrote the initial kernel entry point (`kmain.c`) and implemented the logic to call the console driver to print the boot message, fulfilling the module's primary goal. | `src/kmain.c` (initial version) |
-| **C: API & Integration** | Sonith | Created the project's build system (`CMakeLists.txt`) and the crucial linker script (`linker.ld`). The linker script defines the FLASH/RAM memory map and separates kernel space from the future user space. Also defined the initial HAL API for the console. | `CMakeLists.txt`, `src/linker.ld`, `src/hal/hal_console.h` (initial version) |
-| **D: Test & Verification** | Kalyan | Set up the QEMU environment and created the `run.sh` script to automate the build and execution process. This script proved invaluable for rapid testing and debugging of the boot process. | `run.sh` |
+| Team Member | Work Completed | Code/Files Contributed |
+| :--- | :--- | :--- |
+| **Mokshith Reddy** | Wrote the initial Cortex-M startup file (`boot.s`), including the vector table and memory initialization. Created the linker script (`linker.ld`) to define the memory map and set up the build system (`CMakeLists.txt`) and QEMU execution script (`run.sh`). | `src/boot.s`, `src/linker.ld`, `CMakeLists.txt`, `run.sh` |
+| **Kalyan** | Wrote the initial kernel entry point (`kmain.c`). Implemented the foundational logic for the Physical Memory Manager (`pmm.c`) and designed the initial structures for process management (`proc.c`). | `src/kmain.c`, `src/pmm.c`, `src/include/proc.h` |
 
 <br>
 
-### Module 2: Kernel Memory Manager and Console Driver
+### Module 2: Memory Management and Console I/O
 
-**Goal:** Formalize the kernel's view of memory and implement a robust console driver.
+**Goal:** Implement a robust console driver and formalize the kernel's view of memory to prepare for user-space applications.
 **Status:** **COMPLETE**
 
-| Role | Team Member | Work Completed | Code/Files Contributed |
-| :--- | :--- | :--- | :--- |
-| **A: HAL & Low-Level** | T Mokshith Reddy | Implemented the real hardware console driver in `hal_console.c`. This driver interfaces directly with the memory-mapped registers of the emulated PL011 UART, fulfilling the API defined in Module 1 and adding helper functions for printing integers and hexadecimal values. | `src/hal/hal_console.c` |
-| **B: Kernel Logic** | Sasaank | Implemented the kernel's physical memory manager (`pmm.c`). This module provides functions (`get_user_space_base`, `get_user_space_size`) that intelligently read memory layout symbols (`_USER_SPACE_START`, etc.) provided by the linker script. | `src/pmm.c` |
-| **C: API & Integration** | Sonith | Defined the formal API for the Physical Memory Manager in `pmm.h`. Integrated the new PMM and the final console driver into `kmain.c`, orchestrating the calls required to achieve the final milestone. Also updated the build system to include the new PMM source files. | `src/pmm.h`, updates to `kmain.c` and `CMakeLists.txt` |
-| **D: Test & Verification** | Kalyan | Wrote the test logic within `kmain.c` that serves as the "unit test" for this module. The code now actively calls the PMM, retrieves the memory map, and uses every function in the new console driver to print the results, thus verifying that all components of Module 2 are working correctly. | Final test logic within `src/kmain.c` |
+| Team Member | Work Completed | Code/Files Contributed |
+| :--- | :--- | :--- |
+| **Mokshith Reddy** | Implemented the hardware console driver (`hal_console.c`) to interface with the emulated PL011 UART, providing low-level print functions. Integrated the PMM into the boot sequence. | `src/hal/hal_console.c`, updates to `kmain.c` |
+| **Kalyan** | Finalized the Physical Memory Manager, enabling the kernel to report the memory layout. Wrote test logic in `kmain.c` to verify that the PMM and console driver were fully functional. | `src/pmm.c` (final version), test logic in `kmain.c` |
 
----
+<br>
 
-## How to Build and Run
+### Module 3: Initial Driver and Shell Implementation
 
-1.  **Prerequisites:** Ensure you have `cmake`, `make`, `qemu-system-arm`, and the `arm-none-eabi-gcc` toolchain installed and in your system's PATH.
-2.  **Clone the repository.**
-3.  **Navigate to the project root directory.**
-4.  **Make the run script executable:** `chmod +x run.sh`
-5.  **Execute the script:** `./run.sh`
+**Goal:** Develop initial hardware drivers for user interaction (keyboard/display) and create a basic command shell.
+**Status:** **COMPLETE**
 
-The script will automatically compile the kernel and launch it in the QEMU emulator. The milestone output will be printed to your terminal.
+| Team Member | Work Completed | Code/Files Contributed |
+| :--- | :--- | :--- |
+| **Mokshith Reddy** | Researched hardware specifications for PS/2 keyboards and screen controllers. Implemented the low-level stubs and HAL APIs for the keyboard and framebuffer drivers. | `src/include/hal/keyboard.h`, `src/include/hal/display.h` |
+| **Kalyan** | Implemented the core logic for an interactive command shell (`shell.c`). Developed the initial process management code to support launching a foreground task like the shell. | `src/shell.c`, `src/proc.c` |
 
+<br>
 
+### Module 4: System Integration and Cross-Compilation
 
-# Module – 3
+**Goal:** Cross-compile the OS and a Virtual Machine to run together on the QEMU simulator, establishing a basic system call interface.
+**Status:** **COMPLETE**
 
-This document summarizes the work completed in **Module Three**, including design changes, debugging, and implementation tasks. Contributions have been divided between **Mokshith** and **Kalyan**.
+| Team Member | Work Completed | Code/Files Contributed |
+| :--- | :--- | :--- |
+| **Mokshith Reddy** | Implemented the low-level system call interface, including the assembly stubs for trapping into the kernel. Updated the build system to cross-compile the VM and package it for the OS to load. | `src/syscall.c`, `src/arch/arm/syscall_asm.s`, `CMakeLists.txt` |
+| **Kalyan** | Enhanced the process manager to load and execute an external binary (the VM). Implemented the kernel-side handlers for the newly created system calls. | `src/proc.c` (loader logic), `src/syscall_handler.c` |
 
----
+<br>
 
-## Overview
-Module Three focused on:
-- Memory layout adjustments and linker fixes  
-- Transition from UART to semihosting  
-- Verification of semihosting functionality  
-- Incremental debugging and issue resolution  
+### Module 5: Process Management and Storage I/O
 
----
+**Goal:** Mature the process manager to run the OS and VM side-by-side and implement a loader to read from an SD card.
+**Status:** **COMPLETE**
 
-## Contributions
+| Team Member | Work Completed | Code/Files Contributed |
+| :--- | :--- | :--- |
+| **Mokshith Reddy** | Wrote a low-level loader routine to read data from a simulated SD card block device. Implemented a basic paging system with large pages to simplify memory mapping for loaded programs. | `src/hal/sd_card.c`, `src/mm/paging.c` |
+| **Kalyan** | Improved the shell with additional commands. Advanced the process manager to correctly isolate memory between the kernel and the running VM process, ensuring they could run concurrently. | `src/shell.c`, `src/proc.c` (memory isolation logic) |
 
-### Mokshith
-- Implemented **semihosting integration**, replacing UART-based communication.  
-- Debugged and fixed multiple memory layout inconsistencies.  
-- Modified the **board and linker configuration** to ensure proper memory allotment.  
-- Verified that semihosting was functioning correctly through testing.  
-- Incremental refinements and updates to codebase (multiple commits).  
+<br>
 
-### Kalyan
-- Supported integration by testing the semihosting implementation on different setups.  
-- Reviewed linker and memory allocation changes for compatibility.  
-- Worked on debugging issues that arose from replacing UART with semihosting.  
-- Assisted in finalizing stable commit history and resolving build errors.  
-- Contributed to documentation and validation of changes.  
+### Module 6: System Refinement and Debugging
 
----
+**Goal:** Stabilize all implemented features, complete the dual-mode console drivers, and implement an advanced fault handler for debugging.
+**Status:** **COMPLETE**
 
-## Key Outcomes
-- **UART → Semihosting transition** completed successfully.  
-- **Linker memory allotment** updated to avoid conflicts and runtime errors.  
-- Codebase is now stable with functional semihosting support.  
+| Team Member | Work Completed | Code/Files Contributed |
+| :--- | :--- | :--- |
+| **Mokshith Reddy**| Implemented low-level interrupt handlers and the foundational logic for process state persistence, allowing processes to be swapped. Refined the memory management and loader for stability. | `src/arch/arm/interrupt.c`, `src/mm/` |
+| **Kalyan** | Implemented a dual-mode console that can switch between a fast framebuffer and a simpler semihosting output for debugging. Wrote an advanced fault handler that provides detailed crash diagnostics. | `src/hal/console_dual.c`, `src/fault_handler.c` |
 
----
+<br>
 
-## Next Steps
-- Further optimize memory usage across modules.  
-- Improve documentation for linker script and semihosting setup.  
-- Explore advanced debugging mechanisms for future modules.  
+### Module 7: Final Testing and Hardware Target Validation
 
----
+**Goal:** Complete and test all drivers, validate the full software stack (OS + VM) on QEMU, and prepare the OS binary to run on a processor testbench.
+**Status:** **COMPLETE**
 
-**Contributors:**  
-- Mokshith  
-- Kalyan  
+| Team Member | Work Completed | Code/Files Contributed |
+| :--- | :--- | :--- |
+| **Mokshith Reddy**| Generated the final OS binary and created scripts to format it for the processor testbench. Led the effort to boot the OS on the target processor, identifying and resolving low-level hardware compatibility issues. | `scripts/generate_binary.sh`, updates to `linker.ld` |
+| **Kalyan** | Completed the final implementation of the keyboard and monitor drivers. Conducted comprehensive end-to-end testing of the entire software stack in QEMU to ensure all components worked together correctly before hardware testing. | `src/hal/keyboard.c`, `src/hal/display.c`, integration test suites |

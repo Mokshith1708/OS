@@ -1,4 +1,4 @@
-#include "semihost.h"
+#include "include/semihost.h"
 
 static inline uint32_t sh_call(uint32_t op, void *arg) {
   register uint32_t r0 __asm__("r0") = op;

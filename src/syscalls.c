@@ -4,9 +4,10 @@
 #include <sys/time.h>
 #include <errno.h>
 #include <unistd.h>
+#include <stdint.h>
 
 // Include your own HAL header for character output
-#include "hal/hal_console.h"
+#include "include/hal_console.h"
 
 #undef errno
 extern int errno;
@@ -68,3 +69,48 @@ int _getpid(void) { return 1; }
 
 // Dummy implementations for other functions that might be required.
 int _gettimeofday(struct timeval *tv, void *tz) { (void)tv; (void)tz; return 0; }
+
+
+void svc_handler_c(uint32_t *stack) {
+    // 1. Get syscall number
+    char *pc = (char *)stack[6];
+    // The SVC instruction is 2 bytes long. The PC points to the next instruction.
+    // So the SVC instruction is at PC-2.
+    uint8_t svc_number = *(pc - 2);
+
+    // 2. Get arguments from stack
+    int r0 = stack[0];
+    int r1 = stack[1];
+    int r2 = stack[2];
+
+    int ret = -1; // Default return value
+
+    switch (svc_number) {
+        case 0: // _exit
+            _exit(r0);
+            break; // _exit never returns
+        case 1: // _write
+            ret = _write(r0, (char *)r1, r2);
+            break;
+        // Add other syscalls here
+        default:
+            hal_console_puts("Unknown syscall number: ");
+            hal_console_put_int(svc_number);
+            hal_console_puts("\n");
+            break;
+    }
+
+    // 4. Store return value in stack frame
+    stack[0] = ret;
+}
+
+__attribute__((naked))
+void SVC_Handler(void) {
+    __asm__ volatile (
+        "tst lr, #4\n"
+        "ite eq\n"
+        "mrseq r0, msp\n"
+        "mrsne r0, psp\n"
+        "b svc_handler_c\n"
+    );
+}

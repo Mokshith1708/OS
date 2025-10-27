@@ -1,5 +1,5 @@
-#include "interrupt.h"
-#include "hal/hal_console.h"
+#include "include/interrupt.h"
+#include "include/hal_console.h"
 
 #define NVIC_ISER ((volatile uint32_t *)0xE000E100)
 #define NVIC_ICER ((volatile uint32_t *)0xE000E180)

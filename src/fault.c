@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "hal/hal_console.h"
+#include "include/hal_console.h"
 
 /* SCB system registers (memory-mapped, Cortex-M standard) */
 #define SCB_CFSR   (*(volatile uint32_t *)0xE000ED28)

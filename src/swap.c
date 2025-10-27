@@ -1,7 +1,7 @@
 #include <stdint.h>
-#include "proc.h"
-#include "semihost.h"
-#include "hal/hal_console.h"
+#include "include/proc.h"
+#include "include/semihost.h"
+#include "include/hal_console.h"
 
 /* App RAM window (from linker) */
 extern uint32_t __app_ram_start__[];

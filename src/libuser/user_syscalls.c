@@ -14,7 +14,14 @@ void _exit(int code) {
 
 // Minimal stubs to satisfy the linker for now.
 // We will make these real SVC calls later.
-int _write(int file, char *ptr, int len) { return len; }
+int write(int file, char *ptr, int len) {
+    register int r0 __asm__("r0") = file;
+    register char *r1 __asm__("r1") = ptr;
+    register int r2 __asm__("r2") = len;
+    register int ret __asm__("r0");
+    __asm__ volatile("svc #1" : "=r"(ret) : "r"(r0), "r"(r1), "r"(r2) : "memory");
+    return ret;
+}
 void *_sbrk(int incr) { return (void*)-1; }
 int _close(int file) { return -1; }
 int _fstat(int file, void *st) { return 0; }

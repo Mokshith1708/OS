@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
-#include "proc.h"
-#include "hal/hal_console.h"
+#include "include/proc.h"
+#include "include/hal_console.h"
 
 extern uint32_t __app_ram_start__[];
 extern uint32_t __app_ram_end__[];

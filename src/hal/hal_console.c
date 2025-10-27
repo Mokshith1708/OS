@@ -1,6 +1,6 @@
 /* hal_console.c - Semihosting console for MPS2-QEMU */
-#include "hal/hal_console.h"
-#include "semihost.h"
+#include "include/hal_console.h"
+#include "include/semihost.h"
 #include <stdint.h>
 
 /* Initialize console - nothing needed for semihosting */

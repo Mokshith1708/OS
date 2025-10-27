@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include "hal/hal_console.h"
-#include "proc.h"
+#include "include/hal_console.h"
+#include "include/proc.h"
 
 extern char __ram_start__, __ram_end__;
 #define RAM_BASE ((uintptr_t)&__ram_start__)

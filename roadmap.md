@@ -23,6 +23,9 @@ This document outlines the step-by-step plan to build a simple, full-fledged ope
 ## Phase 2: Expansion & Features
 
 Once the core is stable, development will proceed to these areas:
+- **Refactor Kernel Boot Process:** (Completed as part of recent work)
+- **Implement Command-Line Arguments (argc, argv):** Add support for passing arguments from the kernel to user applications via the process's stack.
+- **Implement Blocking & Yielding Syscalls:** (Currently in progress)
 - **Advanced Scheduler:** Enhance the scheduler to handle multiple processes in various states (e.g., Ready, Running, Blocked, Sleeping).
 - **Memory Management:** Implement a more robust kernel heap allocator (`kalloc`) and potentially a user-space allocator.
 - **Expanded Syscall Interface:** Add new system calls for features like inter-process communication (IPC), timing, and dynamic memory allocation for user processes.

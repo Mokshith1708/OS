@@ -43,3 +43,8 @@ This log tracks all code modifications starting from the OS planning phase.
 *   **`src/jump_trampoline.s`**: Updated `PendSV_Handler` to call `schedule()`.
 *   **`src/kmain.c`**: Removed `shell.h` include and modified `kmain` to create the shell process and call `scheduler_start()`.
 *   **`CMakeLists.txt`**: Removed `src/shell.c` from kernel build sources.
+*   **`src/syscalls.c`**: Implemented `yield` syscall (SVC #2) in the kernel.
+*   **`src/libuser/user_syscalls.c`**: Added user-space `yield()` function.
+*   **`apps/libuser/include/unistd.h`**: Created new header for user-space `unistd` functions, including `yield()`. 
+*   **`apps/shell/shell_app.c`**: Updated to include `unistd.h` and added a call to `yield()` in its main loop.
+*   **`roadmap.md`**: Added "Implement Command-Line Arguments (argc, argv)" to Phase 2.

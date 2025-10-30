@@ -11,20 +11,20 @@ set(CMAKE_AR ${TOOLCHAIN_PREFIX}ar) # Add the archiver tool
 
 set(CPU_FLAGS "-mcpu=cortex-m0 -mthumb")
 set(CMAKE_C_FLAGS "${CPU_FLAGS} -g -Wall -Os -ffunction-sections -fdata-sections" CACHE INTERNAL "")
-set(CMAKE_ASM_FLAGS "${CPU_FLAGS} -g" CACHE INTERNAL "")
+set(CMAKE_ASM_FLAGS "${CPU_FLAGS} -g -mthumb-interwork" CACHE INTERNAL "")
 
 set(SOURCE_FILES
     src/kmain.c
     src/boot.s
     src/hal/hal_console.c
     src/pmm.c
-    src/shell.c
     src/proc.c
     src/semihost.c
     src/swap.c
     src/jump_trampoline.s
     src/syscalls.c
     src/fault.c
+    src/drivers/display.c
     tools/pack_app.c
 )
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/src/linker.ld)
@@ -36,8 +36,6 @@ target_link_options(${PROJECT_NAME}.elf PRIVATE
     -T ${LINKER_SCRIPT}
     -Wl,--gc-sections
     -Wl,-Map=${PROJECT_NAME}.map
-    --specs=nosys.specs # Add this to help with minimal stubs
-    --specs=nano.specs
 )
 # No need to explicitly link gcc, the compiler driver does that.
 

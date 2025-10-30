@@ -26,6 +26,8 @@
 
 extern char __kheap_start[];
 extern char __kheap_end[];
+extern char __uheap_start[];
+extern char __uheap_end[];
 extern char __ustack_top[];
 extern char __ustack_bottom[];
 
@@ -52,9 +54,9 @@ void pmm_free(void *ptr) {
 }
 
 uintptr_t pmm_get_user_space_base(void) {
-    return __uheap_start;
+    return (uintptr_t)__uheap_start;
 }
 
 size_t pmm_get_user_space_size(void) {
-    return __uheap_end - __uheap_start;
+    return (size_t)(__uheap_end - __uheap_start);
 }

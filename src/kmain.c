@@ -1,8 +1,10 @@
 /*
  * MokshithOS Main Kernel File (kmain.c)
  */
-#include "include/display.h" // Use the new standardized header
-#include "include/shell.h"
+#include "include/display.h" 
+#include "include/proc.h"
+#include "include/systick.h"
+#include "include/hal_console.h"
 
 // DEFINE THE PHYSICAL ADDRESS OF YOUR FRAMEBUFFER HERE
 // This address comes from your hardware design (e.g., Vivado address editor).
@@ -10,31 +12,20 @@
 
 // This is the entry point called from boot.s
 void kmain(void) {
-    // Initialize our hardware drivers
-    display_init(FRAMEBUFFER_ADDR);
+    hal_console_puts("MokshithOS Kernel Initializing...\r\n");
 
-    // Set up colors and clear the screen
-    display_set_color(0x00FFFF, 0x00008B); // Cyan text on Dark Blue
-    display_clear_screen(0x00008B);        // Dark Blue background
+    // Initialize subsystems
+    proc_init();
+    systick_init(100); // Initialize for 100Hz ticks
 
-    // Set cursor position and print a welcome message
-    display_set_cursor(10, 5);
-    display_puts("MokshithOS Kernel Booted Successfully!\n");
+    // Create the first user process (the shell)
+    start_process("apps/shell/build/shell_app.proc");
 
-    display_set_cursor(10, 7);
-    display_set_color(0xFFD700, 0x00008B); // Gold text on Dark Blue
-    display_puts("Testing integer print: ");
-    display_put_int(-12345);
-    display_puts("\n");
+    hal_console_puts("Starting scheduler.\r\n");
+    // Start the scheduler. This function should never return.
+    scheduler_start();
 
-    display_set_cursor(10, 8);
-    display_puts("Testing hex print: 0xDEADBEEF -> ");
-    display_put_hex(0xDEADBEEF);
-    display_puts("\n");
-
-    // Start the shell
-    shell_run();
-
-    // We will add the rest of the OS here. For now, just halt.
+    // If scheduler_start ever returns, something is wrong.
+    hal_console_puts("FATAL: scheduler_start returned! Halting.\r\n");
     while(1);
 }

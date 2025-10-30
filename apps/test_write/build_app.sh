@@ -6,10 +6,10 @@ OUT_DIR="$APP_DIR/build"
 TOOLS_DIR="$APP_DIR/../../tools"
 mkdir -p "$OUT_DIR"
 
-arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -Os -ffreestanding -nostdlib -nostartfiles \
+arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -Os -ffreestanding -nostartfiles \
   -T "$APP_DIR/test_write.ld" \
   "$APP_DIR/vectors.s" "$APP_DIR/test_write.c" \
-  -L"$APP_DIR/../../build" -luser \
+  -L"$APP_DIR/../../build" -lc -luser \
   -o "$OUT_DIR/test_write.elf"
 
 arm-none-eabi-objcopy -O binary "$OUT_DIR/test_write.elf" "$OUT_DIR/test_write.bin"

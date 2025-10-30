@@ -19,7 +19,7 @@
 .global g_pfnVectors
 g_pfnVectors:
     .word _estack            /* Initial Stack Pointer */
-    .word Reset_Handler      /* Reset Handler */
+    .word Reset_Handler + 1      /* Reset Handler */
     .word NMI_Handler
     .word HardFault_Handler
     .word 0, 0, 0, 0, 0, 0, 0 /* Reserved */
@@ -32,30 +32,6 @@ g_pfnVectors:
 .section .text
 .thumb_func
 Reset_Handler:
-    /* Copy .data from Flash to RAM */
-    ldr r0, =_sidata  /* Source in Flash */
-    ldr r1, =_sdata   /* Destination in RAM */
-    ldr r2, =_edata   /* End of destination */
-copy_loop:
-    cmp r1, r2
-    bhs copy_done
-    ldr r3, [r0]
-    str r3, [r1]
-    add r1, #4
-    b copy_loop
-copy_done:
-
-    /* Zero out the .bss section in RAM */
-    ldr r1, =_sbss
-    ldr r2, =_ebss
-    movs r3, #0
-bss_loop:
-    cmp r1, r2
-    bhs bss_done
-    str r3, [r1], #4
-    b bss_loop
-bss_done:
-
     /* Call the kernel's main entry point (in C) */
     bl kmain
 

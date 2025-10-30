@@ -23,14 +23,16 @@ echo "--- Starting QEMU ---"
 # Run QEMU and pipe ALL its output to the 'tee' command.
 # This shows the output on the screen AND saves it to the log file.
 qemu-system-arm \
-  -M mps2-an385 \
-  -cpu cortex-m3 \
+  -M microbit \
+  -cpu cortex-m0 \
   -m 16M \
   -nographic \
   -serial null -serial mon:stdio \
-  -semihosting \
+  --semihosting-config enable=on,target=native \
   -kernel build/OS.elf \
-  # -S -gdb tcp::1234
+  -S -gdb tcp::1234 &
+QEMU_PID=$!
+echo "QEMU PID: $QEMU_PID"
 
 echo
 echo "--- QEMU has exited. Full log saved to '$LOG_FILE' ---"

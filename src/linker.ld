@@ -11,7 +11,7 @@ ENTRY(Reset_Handler)
 MEMORY
 {
     FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 128K
-    RAM   (rwx): ORIGIN = 0x20000000, LENGTH = 20K
+    RAM   (rwx): ORIGIN = 0x20000000, LENGTH = 16K
 }
 
 /* --- Global Symbols --- */
@@ -36,6 +36,13 @@ SECTIONS
         *(.text*)
         *(.rodata*)
         . = ALIGN(4);
+    } > FLASH
+
+    .init :
+    {
+        KEEP(*(.init))
+        KEEP(*(.init_array))
+        KEEP(*(.fini_array))
     } > FLASH
 
     /* This symbol marks where the .data initial values are in FLASH */
@@ -64,4 +71,16 @@ SECTIONS
     /* _end marks the end of the kernel's static memory usage */
     /* The kernel heap will start here */
     _end = .;
+
+    /* Define user heap symbols */
+    __uheap_start = _app_ram_start;
+    __uheap_end = _ram_end;
+
+    /* Define app ram symbols */
+    __app_ram_start__ = _app_ram_start;
+    __app_ram_end__ = _ram_end;
+
+    /* Define total RAM symbols */
+    __ram_start__ = ORIGIN(RAM);
+    __ram_end__ = ORIGIN(RAM) + LENGTH(RAM);
 }

@@ -1,0 +1,184 @@
+Archive member included to satisfy reference by file (symbol)
+
+/usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+                              build/stdio.o (__aeabi_idivmod)
+/usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+                              /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o) (__aeabi_idiv0)
+
+There are no discarded input sections
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+USER_RAM         0x20008000         0x00008000         xrw
+FLASH            0x00000000         0x00040000         xr
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD build/shell_app.o
+LOAD build/user_syscalls.o
+LOAD build/user_startup.o
+LOAD build/stdio.o
+LOAD build/string.o
+LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a
+                0x20010000                        _estack = (ORIGIN (USER_RAM) + LENGTH (USER_RAM))
+
+.vectors        0x20008000        0x8
+ *(.vectors)
+ .vectors       0x20008000        0x8 build/user_startup.o
+
+.comment        0x00000000       0x26
+ .comment       0x00000000       0x26 build/shell_app.o
+                                 0x27 (size before relaxing)
+ .comment       0x00000026       0x27 build/user_syscalls.o
+ .comment       0x00000026       0x27 build/stdio.o
+ .comment       0x00000026       0x27 build/string.o
+
+.ARM.attributes
+                0x00000000       0x2f
+ .ARM.attributes
+                0x00000000       0x2c build/shell_app.o
+ .ARM.attributes
+                0x0000002c       0x2c build/user_syscalls.o
+ .ARM.attributes
+                0x00000058       0x21 build/user_startup.o
+ .ARM.attributes
+                0x00000079       0x2c build/stdio.o
+ .ARM.attributes
+                0x000000a5       0x2c build/string.o
+ .ARM.attributes
+                0x000000d1       0x1c /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .ARM.attributes
+                0x000000ed       0x1c /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+
+.text           0x20008000      0x598
+                0x20008000                        . = ALIGN (0x4)
+ *(.text .text* .rodata .rodata*)
+ .text          0x20008000        0x0 build/shell_app.o
+ .rodata.str1.4
+                0x20008000       0xda build/shell_app.o
+                                 0xd6 (size before relaxing)
+ *fill*         0x200080da        0x2 
+ .text.startup  0x200080dc      0x10c build/shell_app.o
+                0x200080dc                main
+ .text          0x200081e8       0x38 build/user_syscalls.o
+                0x200081e8                _exit
+                0x200081f0                _write
+                0x200081f4                _read
+                0x200081f8                _sbrk
+                0x20008200                _close
+                0x20008208                _fstat
+                0x2000820c                _isatty
+                0x20008210                _lseek
+                0x20008214                _kill
+                0x2000821c                _getpid
+ .text          0x20008220        0xa build/user_startup.o
+                0x20008220                _start
+ *fill*         0x2000822a        0x2 
+ .text          0x2000822c      0x1e4 build/stdio.o
+                0x200082ac                putchar
+                0x200082c4                puts
+                0x200082e8                getchar
+                0x2000830c                printf
+ .rodata.str1.4
+                0x20008410        0x2 build/stdio.o
+ .text          0x20008410       0x3c build/string.o
+                0x20008410                strcmp
+                0x20008438                strlen
+ .text          0x2000844c      0x148 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+                0x2000844c                __aeabi_idiv
+                0x2000844c                __divsi3
+                0x20008574                __aeabi_idivmod
+ .text          0x20008594        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+                0x20008594                __aeabi_ldiv0
+                0x20008594                __aeabi_idiv0
+                0x20008598                        . = ALIGN (0x4)
+                0x20008598                        _etext = .
+
+.glue_7         0x20008598        0x0
+ .glue_7        0x20008598        0x0 linker stubs
+
+.glue_7t        0x20008598        0x0
+ .glue_7t       0x20008598        0x0 linker stubs
+
+.vfp11_veneer   0x20008598        0x0
+ .vfp11_veneer  0x20008598        0x0 linker stubs
+
+.v4_bx          0x20008598        0x0
+ .v4_bx         0x20008598        0x0 linker stubs
+
+.iplt           0x20008598        0x0
+ .iplt          0x20008598        0x0 build/shell_app.o
+
+.rel.dyn        0x20008598        0x0
+ .rel.iplt      0x20008598        0x0 build/shell_app.o
+
+.data           0x20008598        0x0
+                0x20008598                        . = ALIGN (0x4)
+                0x20008598                        _sdata = .
+ *(.data .data*)
+ .data          0x20008598        0x0 build/shell_app.o
+ .data          0x20008598        0x0 build/user_syscalls.o
+ .data          0x20008598        0x0 build/user_startup.o
+ .data          0x20008598        0x0 build/stdio.o
+ .data          0x20008598        0x0 build/string.o
+ .data          0x20008598        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .data          0x20008598        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+                0x20008598                        . = ALIGN (0x4)
+                0x20008598                        _edata = .
+
+.igot.plt       0x20008598        0x0
+ .igot.plt      0x20008598        0x0 build/shell_app.o
+
+.bss            0x20008598        0x0
+                0x20008598                        . = ALIGN (0x4)
+                0x20008598                        _sbss = .
+ *(.bss .bss*)
+ .bss           0x20008598        0x0 build/shell_app.o
+ .bss           0x20008598        0x0 build/user_syscalls.o
+ .bss           0x20008598        0x0 build/user_startup.o
+ .bss           0x20008598        0x0 build/stdio.o
+ .bss           0x20008598        0x0 build/string.o
+ .bss           0x20008598        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .bss           0x20008598        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+ *(COMMON)
+                0x20008598                        . = ALIGN (0x4)
+                0x20008598                        _ebss = .
+                [!provide]                        PROVIDE (__user_ram_start__ = ORIGIN (USER_RAM))
+                [!provide]                        PROVIDE (__user_ram_end__ = (ORIGIN (USER_RAM) + LENGTH (USER_RAM)))
+OUTPUT(build/shell_app.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_frame    0x00000000       0x20
+ .debug_frame   0x00000000       0x20 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+
+.debug_line     0x00000000       0xbd
+ .debug_line    0x00000000       0x73 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .debug_line    0x00000073       0x4a /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+
+.debug_line_str
+                0x00000000       0x7e
+ .debug_line_str
+                0x00000000       0x7e /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .debug_line_str
+                0x0000007e       0x7e /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+
+.debug_info     0x00000000       0x7a
+ .debug_info    0x00000000       0x3e /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .debug_info    0x0000003e       0x3c /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+
+.debug_abbrev   0x00000000       0x4e
+ .debug_abbrev  0x00000000       0x28 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .debug_abbrev  0x00000028       0x26 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+
+.debug_aranges  0x00000000       0x40
+ .debug_aranges
+                0x00000000       0x20 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .debug_aranges
+                0x00000020       0x20 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+
+.debug_str      0x00000000       0xbf
+ .debug_str     0x00000000       0xbf /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+                                 0xa3 (size before relaxing)
+ .debug_str     0x000000bf       0xa6 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)

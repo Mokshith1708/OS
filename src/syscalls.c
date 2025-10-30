@@ -8,6 +8,7 @@
 
 // Include your own HAL header for character output
 #include "include/hal_console.h"
+#include "include/proc.h" // For schedule()
 
 #undef errno
 extern int errno;
@@ -62,7 +63,22 @@ int _close(int file) { (void)file; errno = EBADF; return -1; }
 int _fstat(int file, struct stat *st) { (void)file; st->st_mode = S_IFCHR; return 0; }
 int _isatty(int file) { (void)file; return 1; }
 int _lseek(int file, int ptr, int dir) { (void)file; (void)ptr; (void)dir; return 0; }
-int _read(int file, char *ptr, int len) { (void)file; (void)ptr; (void)len; return 0; }
+
+int _read(int file, char *ptr, int len) {
+    // We only handle stdin (file descriptor 0)
+    if (file != 0) {
+        errno = EBADF;
+        return -1;
+    }
+
+    int i;
+    for (i = 0; i < len; i++) {
+        // This is a blocking, polling read.
+        ptr[i] = hal_console_getchar();
+    }
+    return len;
+}
+
 int _open(const char *name, int flags, int mode) { (void)name; (void)flags; (void)mode; errno = ENOSYS; return -1; }
 int _kill(int pid, int sig) { (void)pid; (void)sig; errno = EINVAL; return -1; }
 int _getpid(void) { return 1; }
@@ -72,13 +88,11 @@ int _gettimeofday(struct timeval *tv, void *tz) { (void)tv; (void)tz; return 0; 
 
 
 void svc_handler_c(uint32_t *stack) {
-    // 1. Get syscall number
+    // 1. Get syscall number from the SVC instruction
     char *pc = (char *)stack[6];
-    // The SVC instruction is 2 bytes long. The PC points to the next instruction.
-    // So the SVC instruction is at PC-2.
     uint8_t svc_number = *(pc - 2);
 
-    // 2. Get arguments from stack
+    // 2. Get arguments from the process stack
     int r0 = stack[0];
     int r1 = stack[1];
     int r2 = stack[2];
@@ -86,12 +100,22 @@ void svc_handler_c(uint32_t *stack) {
     int ret = -1; // Default return value
 
     switch (svc_number) {
-        case 0: // _exit
+        case 1: // _exit
             _exit(r0);
             break; // _exit never returns
-        case 1: // _write
+        
+        case 2: // yield
+            schedule(); // Call the scheduler to switch processes
+            break;
+
+        case 3: // _read
+            ret = _read(r0, (char *)r1, r2);
+            break;
+
+        case 4: // _write
             ret = _write(r0, (char *)r1, r2);
             break;
+
         // Add other syscalls here
         default:
             hal_console_puts("Unknown syscall number: ");
@@ -107,10 +131,13 @@ void svc_handler_c(uint32_t *stack) {
 __attribute__((naked))
 void SVC_Handler(void) {
     __asm__ volatile (
-        "tst lr, #4\n"
-        "ite eq\n"
-        "mrseq r0, msp\n"
-        "mrsne r0, psp\n"
+        "mrs r0, msp\n"
+        "mov r2, lr\n"
+        "mov r1, #4\n"
+        "tst r2, r1\n"
+        "beq .L_msp_is_active\n"
+        "mrs r0, psp\n"
+        ".L_msp_is_active:\n"
         "b svc_handler_c\n"
     );
 }

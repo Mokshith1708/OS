@@ -21,5 +21,5 @@ _start:
     // by calling the exit system call (SVC #0)
 exit_loop:
     movs r0, #0 // return code 0
-    svc #0      // Call the OS's exit service
+    svc #1      // Call the OS's exit service
     b exit_loop // Should never be reached

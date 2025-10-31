@@ -22,6 +22,7 @@ typedef struct pcb {
     uint32_t sp;            // Stack Pointer (must be first element for context switching)
     proc_state_t state;     // Process state
     uint32_t pid;           // Process ID
+    uint32_t heap_brk;      // Program break (end of heap)
     struct pcb *next;       // Pointer for linked list scheduling
 } pcb_t;
 
@@ -29,6 +30,8 @@ typedef struct pcb {
 void proc_init(void);
 void scheduler_start(void);
 void schedule(void);
-int  swap_in (const char *path, uint32_t *entry, uint32_t *sp);
+int  swap_in (const char *path, uint32_t *entry, uint32_t *sp, uint32_t *img_size);
 int  swap_out(const char *path);
 void start_process(const char *path);
+int sys_exec(const char *path, int argc, char *const argv[]);
+void* sys_sbrk(intptr_t increment);

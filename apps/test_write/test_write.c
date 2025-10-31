@@ -1,17 +1,20 @@
+#include <stdio.h>
 #include <unistd.h>
 
-size_t strlen(const char *s) {
-    size_t i = 0;
-    while (s[i]) i++;
-    return i;
-}
-
 // The main function. It does NOT initialize any hardware.
-int main(void) {
-    const char *msg = "Hello from test_write!\n";
-    write(1, msg, strlen(msg));
+int main(int argc, char *argv[]) {
+    printf("Test Write App Started!\n");
 
-    // Loop forever so we know the app didn't crash
-    for (;;) {}
+    printf("Received %d arguments:\n", argc);
+    for (int i = 0; i < argc; i++) {
+        printf("  argv[%d]: %s\n", i, argv[i]);
+    }
+
+    const char *msg = "This is a test message written to stdout.\n";
+    printf("Now, writing a message with the write() syscall:\n%s", msg);
+    write(1, msg, 43); // Manually provide length
+
+    printf("Test Write App Finished.\n");
+
     return 0;
 }

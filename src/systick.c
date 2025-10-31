@@ -44,8 +44,9 @@ void systick_init(uint32_t frequency) {
  * The function name is fixed and is referenced by the vector table in boot.s
  */
 void SysTick_Handler(void) {
+    tick_count++;
     // This is the heartbeat of the OS. On each tick, we request the
     // PendSV exception, which has a lower priority. The PendSV handler
     // will perform the actual context switch when it is safe to do so.
-    ICSR = PENDSVSET;
+    ICSR |= PENDSVSET;
 }

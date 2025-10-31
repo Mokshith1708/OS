@@ -40,7 +40,7 @@ int swap_out(const char *path)
     return 0;
 }
 
-int swap_in(const char *path, uint32_t *entry, uint32_t *sp)
+int swap_in(const char *path, uint32_t *entry, uint32_t *sp, uint32_t *img_size)
 {
     proc_img_hdr_t hdr;
 
@@ -102,6 +102,10 @@ int swap_in(const char *path, uint32_t *entry, uint32_t *sp)
     if (sp)
     {
         *sp = hdr.initial_sp ? hdr.initial_sp : (uint32_t)APP_END;
+    }
+    if (img_size)
+    {
+        *img_size = hdr.ram_size;
     }
 
     hal_console_puts("swap_in: success\r\n");

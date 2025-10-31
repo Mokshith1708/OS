@@ -24,8 +24,9 @@ set(SOURCE_FILES
     src/jump_trampoline.s
     src/syscalls.c
     src/fault.c
+    src/interrupt.c
+    src/systick.c
     src/drivers/display.c
-    tools/pack_app.c
 )
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/src/linker.ld)
 
@@ -55,8 +56,11 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # Define the source files for our user-space library
 set(LIBUSER_SOURCE_FILES
-    src/libuser/user_syscalls.c  # This file will contain the SVC instruction wrappers
-    src/libuser/user_startup.S   # A minimal startup file for user apps
+    apps/libuser/user_syscalls.c
+    apps/libuser/stdio.c
+    apps/libuser/string.c
+    apps/libuser/malloc.c
+    src/libuser/user_startup.S
 )
 
 # This command creates the static library target named "user"
@@ -80,3 +84,27 @@ target_compile_options(user PRIVATE
 add_custom_command(TARGET user POST_BUILD
     COMMAND echo "--- Built Cortex-M0 User Library: libuser.a in build/ ---"
 )
+
+# ------------------------------------------------------------------
+# --- NEW SECTION: Build Host-side Tools (pack_app, mkfs)      ---
+# ------------------------------------------------------------------
+
+# These tools run on the build machine, not the target.
+# We compile them directly using the host's native compiler.
+
+add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/pack_app
+    COMMAND gcc -O2 -o ${CMAKE_BINARY_DIR}/pack_app ${CMAKE_CURRENT_SOURCE_DIR}/tools/pack_app.c
+    DEPENDS tools/pack_app.c
+    COMMENT "Building host tool: pack_app"
+)
+add_custom_target(pack_app_target ALL DEPENDS ${CMAKE_BINARY_DIR}/pack_app)
+
+add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/mkfs
+    COMMAND gcc -O2 -o ${CMAKE_BINARY_DIR}/mkfs ${CMAKE_CURRENT_SOURCE_DIR}/tools/mkfs.c
+    DEPENDS tools/mkfs.c
+    COMMENT "Building host tool: mkfs"
+)
+add_custom_target(mkfs_target ALL DEPENDS ${CMAKE_BINARY_DIR}/mkfs)
+

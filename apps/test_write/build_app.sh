@@ -1,28 +1,26 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
 
-APP_DIR="$(cd "$(dirname "$0")" && pwd)"
-OUT_DIR="$APP_DIR/build"
-TOOLS_DIR="$APP_DIR/../../tools"
-mkdir -p "$OUT_DIR"
+set -e
 
-arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -Os -ffreestanding -nostartfiles \
-  -T "$APP_DIR/test_write.ld" \
-  "$APP_DIR/vectors.s" "$APP_DIR/test_write.c" \
-  -L"$APP_DIR/../../build" -lc -luser \
-  -o "$OUT_DIR/test_write.elf"
+# Change to the script's directory
+cd $(dirname $0)
 
-arm-none-eabi-objcopy -O binary "$OUT_DIR/test_write.elf" "$OUT_DIR/test_write.bin"
+APP_NAME=test_write
+TOOLCHAIN_PREFIX=arm-none-eabi
 
+mkdir -p build
 
+# Compile app sources
+${TOOLCHAIN_PREFIX}-gcc -c -o build/$APP_NAME.o $APP_NAME.c -O2 -Wall -Wextra -nostdlib -ffreestanding -mcpu=cortex-m0 -mthumb -I../libuser/include
+${TOOLCHAIN_PREFIX}-as -o build/vectors.o vectors.s -mcpu=cortex-m0 -mthumb
 
-# pad to 60 KiB = 61440
-truncate -s 30720 "$OUT_DIR/test_write.bin"
+# Link against libuser.a
+${TOOLCHAIN_PREFIX}-gcc -T $APP_NAME.ld -o build/$APP_NAME.elf build/$APP_NAME.o build/vectors.o ../../build/libuser.a -nostartfiles -nostdlib -lgcc -Wl,-Map=build/output.map
 
-# build packer if needed
-cc -O2 -o "$TOOLS_DIR/pack_app" "$TOOLS_DIR/pack_app.c"
+# Convert to .bin
+${TOOLCHAIN_PREFIX}-objcopy -O binary build/$APP_NAME.elf build/$APP_NAME.bin
 
-# wrap as .proc (header + body)
-"$TOOLS_DIR/pack_app" "$OUT_DIR/test_write.bin" "$OUT_DIR/test_write.proc"
+# Create .proc file
+../../build/pack_app build/$APP_NAME.bin build/$APP_NAME.proc
 
-echo "Built: $OUT_DIR/test_write.proc (60KB + 16B header)"
+echo "$APP_NAME built successfully!"

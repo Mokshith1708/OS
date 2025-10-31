@@ -4,6 +4,19 @@ This log tracks all code modifications starting from the OS planning phase.
 
 ---
 
+### 2025-10-31
+
+*   **Project**: Removed temporary build artifacts (`build/`, `apps/*/build/`) and log files to clean the workspace.
+*   **Syscalls**: Implemented a new `exec` system call (SVC #5) to allow a process to load and run a new program, replacing its own memory image.
+*   **Syscalls**: The `_exit` syscall now gracefully handles process termination by re-loading and starting the main shell application instead of halting the entire system.
+*   **Interrupts**: Implemented a full preemptive multitasking scheduler. The `SysTick_Handler` now triggers a `PendSV` interrupt to perform context switches.
+*   **Interrupts**: Implemented the `PendSV_Handler` in `src/interrupt.c` to handle the complete context switch, including saving and restoring all necessary registers.
+*   **Fault Handling**: Added a robust `HardFault_Handler` in `src/fault.c`. On a CPU fault, it now prints a full register dump to the console for easier debugging.
+*   **Shell**: The shell application (`apps/shell/shell_app.c`) has been updated with a new `run <app>` command that uses the `exec` syscall to launch other applications.
+*   **Libuser**: Created `apps/libuser/include/unistd.h` and `apps/libuser/user_syscalls.c` to provide user-space applications with access to `exec` and `yield`.
+
+---
+
 ### 2025-10-30
 
 *   **`src/mmu.c`**: Replaced the Cortex-M3 specific MPU implementation with stub functions. This corrects the architecture mismatch for the Cortex-M0 target, which lacks an MPU. The functions are now no-ops to maintain API compatibility.

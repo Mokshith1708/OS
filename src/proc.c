@@ -3,18 +3,31 @@
 #include <string.h>
 #include "include/proc.h"
 #include "include/hal_console.h"
+#include "include/fs.h"
 
 extern void proc_switch_to_user(uint32_t user_sp);
 
 // --- Scheduler Globals ---
-static pcb_t pcb_table[MAX_PROCESSES];
+pcb_t pcb_table[MAX_PROCESSES];
 pcb_t *current_process = NULL;
 
 
 void proc_init(void) {
+    inode_t* root_inode = fs_lookup("/"); // Get root inode
+
     for (int i = 0; i < MAX_PROCESSES; i++) {
         pcb_table[i].state = PROC_STATE_UNUSED;
-    }
+        pcb_table[i].cwd_inode = root_inode;
+        for (int j = 0; j < MAX_OPEN_FILES; j++) {
+            pcb_table[i].fd_table[j] = NULL;
+        }
+        // Initialize message queue
+        pcb_table[i].msg_count = 0;
+        pcb_table[i].msg_read_idx = 0;
+        pcb_table[i].msg_write_idx = 0;
+        for (int j = 0; j < MAX_MESSAGES; j++) {
+            pcb_table[i].msg_queue[j] = NULL;
+        }    }
 }
 
 
@@ -57,7 +70,13 @@ int sys_exec(const char *path, int argc, char *const argv[]) {
     uint32_t initial_sp_from_file = 0;
     uint32_t img_size = 0;
 
-    int rc = swap_in(path, &entry, &initial_sp_from_file, &img_size);
+    inode_t* inode = fs_find_file(path);
+    if (inode == NULL) {
+        hal_console_puts("exec: File not found.\r\n");
+        return -1;
+    }
+
+    int rc = swap_in(inode, &entry, &initial_sp_from_file, &img_size);
     if (rc < 0) {
         hal_console_puts("exec: Load failed.\r\n");
         if (pcb != current_process) pcb->state = PROC_STATE_UNUSED; // Clean up
@@ -198,7 +217,7 @@ void schedule(void) {
     // If not, a real OS would switch to an idle task.
 }
 
-void* sys_sbrk(intptr_t increment) {
+void* _sbrk(intptr_t increment) {
     if (!current_process) {
         return (void*)-1; // No process running
     }

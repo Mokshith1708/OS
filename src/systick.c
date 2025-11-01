@@ -1,5 +1,6 @@
 #include "include/systick.h"
 #include "include/hal_console.h" // For debugging
+#include "include/proc.h" // For process management
 
 // SysTick Register Definitions (Cortex-M0)
 #define SYSTICK_CTRL   (*(volatile uint32_t *)0xE000E010)
@@ -18,7 +19,9 @@
 #define ICSR (*(volatile uint32_t *)0xE000ED04)
 #define PENDSVSET (1 << 28)
 
-static volatile uint32_t tick_count = 0;
+volatile uint32_t tick_count = 0;
+
+extern pcb_t pcb_table[MAX_PROCESSES];
 
 void systick_init(uint32_t frequency) {
     // Disable SysTick during setup
@@ -45,6 +48,18 @@ void systick_init(uint32_t frequency) {
  */
 void SysTick_Handler(void) {
     tick_count++;
+
+    // Update sleep timers for all processes
+    for (int i = 0; i < MAX_PROCESSES; i++) {
+        if (pcb_table[i].state == PROC_STATE_SLEEPING) {
+            if (pcb_table[i].sleep_ticks > 0) {
+                pcb_table[i].sleep_ticks--;
+            } else {
+                pcb_table[i].state = PROC_STATE_READY;
+            }
+        }
+    }
+
     // This is the heartbeat of the OS. On each tick, we request the
     // PendSV exception, which has a lower priority. The PendSV handler
     // will perform the actual context switch when it is safe to do so.

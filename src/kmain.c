@@ -5,6 +5,7 @@
 #include "include/proc.h"
 #include "include/systick.h"
 #include "include/hal_console.h"
+#include "include/fs.h"
 
 // DEFINE THE PHYSICAL ADDRESS OF YOUR FRAMEBUFFER HERE
 // This address comes from your hardware design (e.g., Vivado address editor).
@@ -16,10 +17,11 @@ void kmain(void) {
 
     // Initialize subsystems
     proc_init();
+    fs_init();
     systick_init(100); // Initialize for 100Hz ticks
 
     // Create the first user process (the shell)
-    start_process("apps/shell/build/shell_app.proc");
+    start_process("shell_app.proc");
 
     hal_console_puts("Starting scheduler.\r\n");
     // Start the scheduler. This function should never return.

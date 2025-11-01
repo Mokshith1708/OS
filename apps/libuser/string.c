@@ -13,3 +13,16 @@ size_t strlen(const char *s) {
     while (s[i]) i++;
     return i;
 }
+
+char* strcpy(char* dest, const char* src) {
+    char* original_dest = dest;
+    while ((*dest++ = *src++));
+    return original_dest;
+}
+
+char* strcat(char* dest, const char* src) {
+    char* original_dest = dest;
+    while (*dest) dest++;
+    while ((*dest++ = *src++));
+    return original_dest;
+}

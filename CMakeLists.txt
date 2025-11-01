@@ -27,6 +27,8 @@ set(SOURCE_FILES
     src/interrupt.c
     src/systick.c
     src/drivers/display.c
+    src/ramdisk.c
+    src/fs.c
 )
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/src/linker.ld)
 

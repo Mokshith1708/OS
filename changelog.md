@@ -4,6 +4,49 @@ This log tracks all code modifications starting from the OS planning phase.
 
 ---
 
+### 2025-11-01
+
+*   **Build System**: Implemented a robust multi-stage build process to correctly generate `ramdisk.img` and link it into the kernel. This involved:
+    *   Creating `build_all.sh` to orchestrate the entire build, including building host tools, user applications, creating the ramdisk image, converting it to an object file, and linking it with the kernel.
+    *   Modifying `CMakeLists.txt` to correctly link `ramdisk.o` with the kernel.
+    *   Modifying `src/linker.ld` to include a `.ramdisk` section for the embedded ramdisk image.
+    *   Creating a dummy `src/ramdisk.c` to facilitate the multi-stage build process.
+*   **File System**: Implemented a simple in-memory file system (ramdisk) for managing application binaries and data.
+    *   **`fs.h`**: Defined `file_t` structure for open files and added `inode_num` to `inode_t`.
+    *   **`fs.c`**: Implemented `fs_init()` to initialize the ramdisk, `fs_lookup()` for path resolution, and `fs_find_file()` to locate files.
+    *   **`mkfs.c`**: Updated to populate the `inode_num` field in `inode_t` when creating the ramdisk image.
+    *   **`kmain.c`**: Integrated `fs_init()` into the kernel boot process and updated `start_process` to load applications by filename from the filesystem.
+    *   **`proc.c`**: Initialized `fd_table` and `cwd_inode` in `pcb_t` during process initialization.
+    *   **`swap.c`**: Modified `swap_in` to load application binaries from the ramdisk using inode information instead of semihosting.
+    *   **`syscalls.c`**: Implemented `sys_open`, `sys_read`, `sys_write`, `sys_close`, `sys_lseek`, and `sys_fstat` syscalls for file operations.
+    *   **`user_syscalls.c`**: Implemented user-space wrappers for `open`, `read`, `write`, `close`, `lseek`, and `fstat`.
+*   **Advanced Scheduler**: Enhanced the scheduler to handle processes in a sleeping state.
+    *   **`proc.h`**: Added `sleep_ticks` to `pcb_t`.
+    *   **`syscalls.c`**: Implemented `sys_sleep` syscall.
+    *   **`systick.c`**: Modified `SysTick_Handler` to decrement `sleep_ticks` for sleeping processes and transition them to `PROC_STATE_READY` when sleep duration expires. Made `tick_count` globally accessible.
+    *   **`user_syscalls.c`**: Implemented user-space wrapper for `sleep`.
+*   **Expanded Syscall Interface**: Added timing and inter-process communication (IPC) syscalls.
+    *   **`syscalls.c`**: Implemented `sys_gettimeofday` syscall.
+    *   **`user_syscalls.c`**: Implemented user-space wrapper for `gettimeofday`.
+    *   **`proc.h`**: Added message queue and related fields to `pcb_t`.
+    *   **`proc.c`**: Initialized message queue fields in `pcb_t` during process initialization.
+    *   **`syscalls.c`**: Implemented `sys_send_msg` and `sys_receive_msg` syscalls for message passing.
+    *   **`user_syscalls.c`**: Implemented user-space wrappers for `send_msg` and `receive_msg`.
+*   **Device Drivers**: Implemented a basic memory-mapped UART console driver.
+    *   **`hal_console.h`**: Added `hal_console_try_getchar()` and `hal_console_input_available()`.
+    *   **`hal_console.c`**: Replaced semihosting calls with direct memory-mapped UART access for console I/O.
+    *   **`syscalls.c`**: Modified `sys_read` to use non-blocking console input and block processes if no input is available.
+*   **General Fixes**:
+    *   Resolved `undefined reference to 'sys_write'` and `sys_exec` linker errors.
+    *   Resolved `undefined reference to '__errno'` by defining `errno` and `__errno` in `user_syscalls.c`.
+    *   Resolved `undefined reference to 'sbrk'` by renaming `sys_sbrk` to `_sbrk` in `proc.c` and `proc.h`.
+    *   Resolved `unknown type name 'proc_state_t'` by reordering definitions in `proc.h`.
+    *   Resolved `unknown type name 'proc_img_hdr_t'` by defining it in `proc.h`.
+    *   Resolved `unknown type name 'bool'` by including `<stdbool.h>` in `hal_console.h`.
+    *   Resolved `SYSTICK_HZ` undeclared error by defining it in `systick.h`.
+
+---
+
 ### 2025-10-31
 
 *   **Project**: Removed temporary build artifacts (`build/`, `apps/*/build/`) and log files to clean the workspace.

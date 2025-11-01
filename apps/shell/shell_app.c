@@ -98,7 +98,11 @@ int main(int argc, char *argv[]) {
       }
       char *app_name = args[1];
       char path[128];
-      snprintf(path, sizeof(path), "apps/%s/build/%s.proc", app_name, app_name);
+      strcpy(path, "apps/");
+      strcat(path, app_name);
+      strcat(path, "/build/");
+      strcat(path, app_name);
+      strcat(path, ".proc");
       
       printf("Executing %s...\r\n", path);
       int ret = exec(path, n_args - 1, &args[1]);

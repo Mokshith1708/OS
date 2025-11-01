@@ -1,0 +1,269 @@
+Archive member included to satisfy reference by file (symbol)
+
+../../build/libuser.a(user_syscalls.c.o)
+                              build/test_write.o (write)
+../../build/libuser.a(stdio.c.o)
+                              build/test_write.o (printf)
+../../build/libuser.a(string.c.o)
+                              ../../build/libuser.a(stdio.c.o) (strlen)
+/usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+                              ../../build/libuser.a(stdio.c.o) (__aeabi_idivmod)
+/usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+                              /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o) (__aeabi_idiv0)
+
+There are no discarded input sections
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+USER_RAM         0x20008000         0x00008000         xrw
+FLASH            0x00000000         0x00040000         xr
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD build/test_write.o
+LOAD build/vectors.o
+LOAD ../../build/libuser.a
+LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a
+                0x20010000                        _estack = (ORIGIN (USER_RAM) + LENGTH (USER_RAM))
+
+.vectors        0x20008000        0x8
+ *(.vectors)
+ .vectors       0x20008000        0x8 build/vectors.o
+
+.text           0x20008008      0x51c
+                0x20008008                        . = ALIGN (0x4)
+ *(.text .text* .rodata .rodata*)
+ .text          0x20008008        0x0 build/test_write.o
+ .rodata.str1.4
+                0x20008008       0xbe build/test_write.o
+ *fill*         0x200080c6        0x2 
+ .text.startup  0x200080c8       0x64 build/test_write.o
+                0x200080c8                main
+ .text          0x2000812c        0x6 build/vectors.o
+                0x2000812c                Reset_Handler
+ .text          0x20008132        0x0 ../../build/libuser.a(user_syscalls.c.o)
+ .text.syscall  0x20008132       0x1a ../../build/libuser.a(user_syscalls.c.o)
+ .text.__errno  0x2000814c        0x2 ../../build/libuser.a(user_syscalls.c.o)
+                0x2000814c                __errno
+ .text._exit    0x2000814e       0x10 ../../build/libuser.a(user_syscalls.c.o)
+                0x2000814e                _exit
+ .text._read    0x2000815e       0x10 ../../build/libuser.a(user_syscalls.c.o)
+                0x2000815e                _read
+ .text._write   0x2000816e       0x10 ../../build/libuser.a(user_syscalls.c.o)
+                0x2000816e                _write
+ .text.sbrk     0x2000817e       0x10 ../../build/libuser.a(user_syscalls.c.o)
+                0x2000817e                sbrk
+ .text._close   0x2000818e       0x10 ../../build/libuser.a(user_syscalls.c.o)
+                0x2000818e                _close
+ .text._fstat   0x2000819e       0x10 ../../build/libuser.a(user_syscalls.c.o)
+                0x2000819e                _fstat
+ .text._isatty  0x200081ae        0x4 ../../build/libuser.a(user_syscalls.c.o)
+                0x200081ae                _isatty
+ .text._lseek   0x200081b2       0x10 ../../build/libuser.a(user_syscalls.c.o)
+                0x200081b2                _lseek
+ .text._open    0x200081c2       0x10 ../../build/libuser.a(user_syscalls.c.o)
+                0x200081c2                _open
+ .text._kill    0x200081d2        0x2 ../../build/libuser.a(user_syscalls.c.o)
+                0x200081d2                _kill
+ .text._getpid  0x200081d4        0x4 ../../build/libuser.a(user_syscalls.c.o)
+                0x200081d4                _getpid
+ .text._gettimeofday
+                0x200081d8       0x10 ../../build/libuser.a(user_syscalls.c.o)
+                0x200081d8                _gettimeofday
+ .text.exec     0x200081e8       0x10 ../../build/libuser.a(user_syscalls.c.o)
+                0x200081e8                exec
+ .text.yield    0x200081f8       0x10 ../../build/libuser.a(user_syscalls.c.o)
+                0x200081f8                yield
+ .text.sleep    0x20008208       0x10 ../../build/libuser.a(user_syscalls.c.o)
+                0x20008208                sleep
+ .text.send_msg
+                0x20008218       0x10 ../../build/libuser.a(user_syscalls.c.o)
+                0x20008218                send_msg
+ .text.receive_msg
+                0x20008228       0x10 ../../build/libuser.a(user_syscalls.c.o)
+                0x20008228                receive_msg
+ .text.write    0x20008238        0x8 ../../build/libuser.a(user_syscalls.c.o)
+                0x20008238                write
+ .text          0x20008240        0x0 ../../build/libuser.a(stdio.c.o)
+ .text.itoa.part.0
+                0x20008240       0x64 ../../build/libuser.a(stdio.c.o)
+ .text.putchar  0x200082a4       0x12 ../../build/libuser.a(stdio.c.o)
+                0x200082a4                putchar
+ .rodata.puts.str1.1
+                0x200082b6        0x2 ../../build/libuser.a(stdio.c.o)
+ .text.puts     0x200082b8       0x24 ../../build/libuser.a(stdio.c.o)
+                0x200082b8                puts
+ .text.getchar  0x200082dc       0x1e ../../build/libuser.a(stdio.c.o)
+                0x200082dc                getchar
+ .text.printf   0x200082fa       0x98 ../../build/libuser.a(stdio.c.o)
+                0x200082fa                printf
+ .text          0x20008392        0x0 ../../build/libuser.a(string.c.o)
+ .text.strcmp   0x20008392       0x16 ../../build/libuser.a(string.c.o)
+                0x20008392                strcmp
+ .text.strlen   0x200083a8        0x8 ../../build/libuser.a(string.c.o)
+                0x200083a8                strlen
+ .text.strcpy   0x200083b0        0xe ../../build/libuser.a(string.c.o)
+                0x200083b0                strcpy
+ .text.strcat   0x200083be       0x1a ../../build/libuser.a(string.c.o)
+                0x200083be                strcat
+ .text          0x200083d8      0x148 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+                0x200083d8                __aeabi_idiv
+                0x200083d8                __divsi3
+                0x20008500                __aeabi_idivmod
+ .text          0x20008520        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+                0x20008520                __aeabi_ldiv0
+                0x20008520                __aeabi_idiv0
+                0x20008524                        . = ALIGN (0x4)
+                0x20008524                        _etext = .
+
+.glue_7         0x20008524        0x0
+ .glue_7        0x20008524        0x0 linker stubs
+
+.glue_7t        0x20008524        0x0
+ .glue_7t       0x20008524        0x0 linker stubs
+
+.vfp11_veneer   0x20008524        0x0
+ .vfp11_veneer  0x20008524        0x0 linker stubs
+
+.v4_bx          0x20008524        0x0
+ .v4_bx         0x20008524        0x0 linker stubs
+
+.iplt           0x20008524        0x0
+ .iplt          0x20008524        0x0 build/test_write.o
+
+.rel.dyn        0x20008524        0x0
+ .rel.iplt      0x20008524        0x0 build/test_write.o
+
+.data           0x20008524        0x0
+                0x20008524                        . = ALIGN (0x4)
+                0x20008524                        _sdata = .
+ *(.data .data*)
+ .data          0x20008524        0x0 build/test_write.o
+ .data          0x20008524        0x0 build/vectors.o
+ .data          0x20008524        0x0 ../../build/libuser.a(user_syscalls.c.o)
+ .data          0x20008524        0x0 ../../build/libuser.a(stdio.c.o)
+ .data          0x20008524        0x0 ../../build/libuser.a(string.c.o)
+ .data          0x20008524        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .data          0x20008524        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+                0x20008524                        . = ALIGN (0x4)
+                0x20008524                        _edata = .
+
+.igot.plt       0x20008524        0x0
+ .igot.plt      0x20008524        0x0 build/test_write.o
+
+.bss            0x20008524        0x0
+                0x20008524                        . = ALIGN (0x4)
+                0x20008524                        _sbss = .
+ *(.bss .bss*)
+ .bss           0x20008524        0x0 build/test_write.o
+ .bss           0x20008524        0x0 build/vectors.o
+ .bss           0x20008524        0x0 ../../build/libuser.a(user_syscalls.c.o)
+ .bss           0x20008524        0x0 ../../build/libuser.a(stdio.c.o)
+ .bss           0x20008524        0x0 ../../build/libuser.a(string.c.o)
+ .bss           0x20008524        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .bss           0x20008524        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+ *(COMMON)
+                0x20008524                        . = ALIGN (0x4)
+                0x20008524                        _ebss = .
+                [!provide]                        PROVIDE (__user_ram_start__ = ORIGIN (USER_RAM))
+                [!provide]                        PROVIDE (__user_ram_end__ = (ORIGIN (USER_RAM) + LENGTH (USER_RAM)))
+OUTPUT(build/test_write.elf elf32-littlearm)
+LOAD linker stubs
+
+.comment        0x00000000       0x26
+ .comment       0x00000000       0x26 build/test_write.o
+                                 0x27 (size before relaxing)
+ .comment       0x00000026       0x27 ../../build/libuser.a(user_syscalls.c.o)
+ .comment       0x00000026       0x27 ../../build/libuser.a(stdio.c.o)
+ .comment       0x00000026       0x27 ../../build/libuser.a(string.c.o)
+
+.ARM.attributes
+                0x00000000       0x2f
+ .ARM.attributes
+                0x00000000       0x2c build/test_write.o
+ .ARM.attributes
+                0x0000002c       0x21 build/vectors.o
+ .ARM.attributes
+                0x0000004d       0x2c ../../build/libuser.a(user_syscalls.c.o)
+ .ARM.attributes
+                0x00000079       0x2c ../../build/libuser.a(stdio.c.o)
+ .ARM.attributes
+                0x000000a5       0x2c ../../build/libuser.a(string.c.o)
+ .ARM.attributes
+                0x000000d1       0x1c /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .ARM.attributes
+                0x000000ed       0x1c /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+
+.debug_info     0x00000000     0x112b
+ .debug_info    0x00000000      0xa5c ../../build/libuser.a(user_syscalls.c.o)
+ .debug_info    0x00000a5c      0x4aa ../../build/libuser.a(stdio.c.o)
+ .debug_info    0x00000f06      0x1ab ../../build/libuser.a(string.c.o)
+ .debug_info    0x000010b1       0x3e /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .debug_info    0x000010ef       0x3c /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+
+.debug_abbrev   0x00000000      0x4d0
+ .debug_abbrev  0x00000000      0x18e ../../build/libuser.a(user_syscalls.c.o)
+ .debug_abbrev  0x0000018e      0x214 ../../build/libuser.a(stdio.c.o)
+ .debug_abbrev  0x000003a2       0xe0 ../../build/libuser.a(string.c.o)
+ .debug_abbrev  0x00000482       0x28 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .debug_abbrev  0x000004aa       0x26 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+
+.debug_loclists
+                0x00000000      0x82f
+ .debug_loclists
+                0x00000000      0x4b7 ../../build/libuser.a(user_syscalls.c.o)
+ .debug_loclists
+                0x000004b7      0x205 ../../build/libuser.a(stdio.c.o)
+ .debug_loclists
+                0x000006bc      0x173 ../../build/libuser.a(string.c.o)
+
+.debug_aranges  0x00000000      0x170
+ .debug_aranges
+                0x00000000       0xb8 ../../build/libuser.a(user_syscalls.c.o)
+ .debug_aranges
+                0x000000b8       0x40 ../../build/libuser.a(stdio.c.o)
+ .debug_aranges
+                0x000000f8       0x38 ../../build/libuser.a(string.c.o)
+ .debug_aranges
+                0x00000130       0x20 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .debug_aranges
+                0x00000150       0x20 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+
+.debug_rnglists
+                0x00000000      0x119
+ .debug_rnglists
+                0x00000000       0x85 ../../build/libuser.a(user_syscalls.c.o)
+ .debug_rnglists
+                0x00000085       0x6f ../../build/libuser.a(stdio.c.o)
+ .debug_rnglists
+                0x000000f4       0x25 ../../build/libuser.a(string.c.o)
+
+.debug_line     0x00000000      0x9ce
+ .debug_line    0x00000000      0x413 ../../build/libuser.a(user_syscalls.c.o)
+ .debug_line    0x00000413      0x362 ../../build/libuser.a(stdio.c.o)
+ .debug_line    0x00000775      0x19c ../../build/libuser.a(string.c.o)
+ .debug_line    0x00000911       0x73 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .debug_line    0x00000984       0x4a /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+
+.debug_str      0x00000000      0x4f9
+ .debug_str     0x00000000      0x4f9 ../../build/libuser.a(user_syscalls.c.o)
+                                0x3e7 (size before relaxing)
+ .debug_str     0x000004f9      0x1ad ../../build/libuser.a(stdio.c.o)
+ .debug_str     0x000004f9      0x154 ../../build/libuser.a(string.c.o)
+ .debug_str     0x000004f9       0xa3 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .debug_str     0x000004f9       0xa6 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)
+
+.debug_frame    0x00000000      0x304
+ .debug_frame   0x00000000      0x1d8 ../../build/libuser.a(user_syscalls.c.o)
+ .debug_frame   0x000001d8       0xa4 ../../build/libuser.a(stdio.c.o)
+ .debug_frame   0x0000027c       0x68 ../../build/libuser.a(string.c.o)
+ .debug_frame   0x000002e4       0x20 /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+
+.debug_line_str
+                0x00000000       0x7e
+ .debug_line_str
+                0x00000000       0x7e /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_divsi3.o)
+ .debug_line_str
+                0x0000007e       0x7e /usr/lib/gcc/arm-none-eabi/13.2.1/libgcc.a(_dvmd_tls.o)

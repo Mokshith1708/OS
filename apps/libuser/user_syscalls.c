@@ -1,5 +1,13 @@
 #include "include/unistd.h"
 #include <errno.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+
+int errno;
+
+int *__errno(void) {
+    return &errno;
+}
 
 // Syscall numbers
 #define SYS_EXIT  1
@@ -8,6 +16,14 @@
 #define SYS_WRITE 4
 #define SYS_EXEC  5
 #define SYS_SBRK  6
+#define SYS_OPEN  7
+#define SYS_CLOSE 8
+#define SYS_LSEEK 9
+#define SYS_FSTAT 10
+#define SYS_SLEEP 11
+#define SYS_GETTIMEOFDAY 12
+#define SYS_SEND_MSG 13
+#define SYS_RECEIVE_MSG 14
 
 // Generic syscall function
 static inline int syscall(int num, int arg1, int arg2, int arg3) {
@@ -41,20 +57,30 @@ int _write(int file, char *ptr, int len) {
     return syscall(SYS_WRITE, file, (int)ptr, len);
 }
 
-void* _sbrk(intptr_t increment) {
+void* sbrk(intptr_t increment) {
     return (void*)syscall(SYS_SBRK, (int)increment, 0, 0);
 }
 
 // Dummy implementations for other functions that might be required by Newlib.
 // These will eventually be replaced by proper syscalls.
-int _close(int file) { (void)file; errno = EBADF; return -1; }
-int _fstat(int file, struct stat *st) { (void)file; st->st_mode = S_IFCHR; return 0; }
+int _close(int file) {
+    return syscall(SYS_CLOSE, file, 0, 0);
+}
+int _fstat(int file, struct stat *st) {
+    return syscall(SYS_FSTAT, file, (int)st, 0);
+}
 int _isatty(int file) { (void)file; return 1; }
-int _lseek(int file, int ptr, int dir) { (void)file; (void)ptr; (void)dir; return 0; }
-int _open(const char *name, int flags, int mode) { (void)name; (void)flags; (void)mode; errno = ENOSYS; return -1; }
+int _lseek(int file, int ptr, int dir) {
+    return syscall(SYS_LSEEK, file, ptr, dir);
+}
+int _open(const char *name, int flags, int mode) {
+    return syscall(SYS_OPEN, (int)name, flags, mode);
+}
 int _kill(int pid, int sig) { (void)pid; (void)sig; errno = EINVAL; return -1; }
 int _getpid(void) { return 1; }
-int _gettimeofday(struct timeval *tv, void *tz) { (void)tv; (void)tz; return 0; }
+int _gettimeofday(struct timeval *tv, void *tz) {
+    return syscall(SYS_GETTIMEOFDAY, (int)tv, (int)tz, 0);
+}
 
 // User-facing syscall wrappers
 int exec(const char *path, int argc, char *const argv[]) {
@@ -63,6 +89,18 @@ int exec(const char *path, int argc, char *const argv[]) {
 
 void yield(void) {
     syscall(SYS_YIELD, 0, 0, 0);
+}
+
+void sleep(uint32_t milliseconds) {
+    syscall(SYS_SLEEP, milliseconds, 0, 0);
+}
+
+int send_msg(int pid, char* msg) {
+    return syscall(SYS_SEND_MSG, pid, (int)msg, 0);
+}
+
+char* receive_msg(void) {
+    return (char*)syscall(SYS_RECEIVE_MSG, 0, 0, 0);
 }
 
 // The write function from unistd.h now calls _write

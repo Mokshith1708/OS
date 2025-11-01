@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <stdbool.h>
 
 void hal_console_init(void);
 void hal_console_putc(char c);
@@ -9,3 +10,5 @@ void hal_console_put_hex(uint32_t n);
 
 /* NEW: input */
 int  hal_console_getchar(void);
+int  hal_console_try_getchar(void);
+bool hal_console_input_available(void);

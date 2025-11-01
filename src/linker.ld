@@ -68,6 +68,14 @@ SECTIONS
         _ebss = .;         /* .bss end in RAM */
     } > RAM
 
+    .ramdisk :
+    {
+        . = ALIGN(4);
+        __ramdisk_start = .;
+        KEEP(*ramdisk.o(.data))
+        __ramdisk_end = .;
+    } > RAM
+
     /* _end marks the end of the kernel's static memory usage */
     /* The kernel heap will start here */
     _end = .;

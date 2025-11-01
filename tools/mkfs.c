@@ -76,6 +76,7 @@ int main(int argc, char *argv[]) {
         }
 
         // Create inode for this file
+        inodes[current_inode].inode_num = current_inode;
         inodes[current_inode].type = 1; // File
         inodes[current_inode].size = file_size;
 

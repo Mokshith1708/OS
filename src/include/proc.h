@@ -6,7 +6,8 @@ typedef enum {
     PROC_STATE_READY,
     PROC_STATE_RUNNING,
     PROC_STATE_BLOCKED,
-    PROC_STATE_SLEEPING
+    PROC_STATE_SLEEPING,
+    PROC_STATE_KILLED
 } proc_state_t;
 
 typedef struct {

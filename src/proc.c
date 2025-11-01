@@ -217,7 +217,7 @@ void schedule(void) {
     // If not, a real OS would switch to an idle task.
 }
 
-void* _sbrk(intptr_t increment) {
+void* proc_sbrk_internal(intptr_t increment) {
     if (!current_process) {
         return (void*)-1; // No process running
     }

@@ -2,28 +2,13 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include "include/sys_calls.h" // Include centralized syscall definitions
 
 int errno;
 
 int *__errno(void) {
     return &errno;
 }
-
-// Syscall numbers
-#define SYS_EXIT  1
-#define SYS_YIELD 2
-#define SYS_READ  3
-#define SYS_WRITE 4
-#define SYS_EXEC  5
-#define SYS_SBRK  6
-#define SYS_OPEN  7
-#define SYS_CLOSE 8
-#define SYS_LSEEK 9
-#define SYS_FSTAT 10
-#define SYS_SLEEP 11
-#define SYS_GETTIMEOFDAY 12
-#define SYS_SEND_MSG 13
-#define SYS_RECEIVE_MSG 14
 
 // Generic syscall function
 static inline int syscall(int num, int arg1, int arg2, int arg3) {
@@ -57,7 +42,7 @@ int _write(int file, char *ptr, int len) {
     return syscall(SYS_WRITE, file, (int)ptr, len);
 }
 
-void* sbrk(intptr_t increment) {
+void* _sbrk(intptr_t increment) {
     return (void*)syscall(SYS_SBRK, (int)increment, 0, 0);
 }
 
@@ -69,15 +54,21 @@ int _close(int file) {
 int _fstat(int file, struct stat *st) {
     return syscall(SYS_FSTAT, file, (int)st, 0);
 }
-int _isatty(int file) { (void)file; return 1; }
+int _isatty(int file) {
+    return syscall(SYS_ISATTY, file, 0, 0);
+}
 int _lseek(int file, int ptr, int dir) {
     return syscall(SYS_LSEEK, file, ptr, dir);
 }
 int _open(const char *name, int flags, int mode) {
     return syscall(SYS_OPEN, (int)name, flags, mode);
 }
-int _kill(int pid, int sig) { (void)pid; (void)sig; errno = EINVAL; return -1; }
-int _getpid(void) { return 1; }
+int _kill(int pid, int sig) {
+    return syscall(SYS_KILL, pid, sig, 0);
+}
+int _getpid(void) {
+    return syscall(SYS_GETPID, 0, 0, 0);
+}
 int _gettimeofday(struct timeval *tv, void *tz) {
     return syscall(SYS_GETTIMEOFDAY, (int)tv, (int)tz, 0);
 }

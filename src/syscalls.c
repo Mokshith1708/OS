@@ -8,38 +8,62 @@
 
 #include "include/proc.h" // For schedule()
 #include "include/hal_console.h"
-#include <stdlib.h>
+#include "include/kmalloc.h" // For kmalloc and kfree
 #include "include/systick.h"
+// src/syscalls.c
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <errno.h>
+#include <unistd.h>
+#include <stdint.h>
+
+#include "include/proc.h" // For schedule()
+#include "include/hal_console.h"
+#include "include/kmalloc.h" // For kmalloc and kfree
+#include "include/systick.h"
+#include "../apps/libuser/include/sys_calls.h" // For syscall numbers
 #include <string.h>
 
 extern pcb_t *current_process;
 extern uint8_t __ramdisk_start[];
 extern pcb_t pcb_table[MAX_PROCESSES];
 
-// Syscall numbers - MUST match apps/libuser/user_syscalls.c
-#define SYS_EXIT  1
-#define SYS_YIELD 2
-#define SYS_READ  3
-#define SYS_WRITE 4
-#define SYS_EXEC  5
-#define SYS_EXEC  5
-#define SYS_SBRK  6
-#define SYS_OPEN  7
-#define SYS_CLOSE 8
-#define SYS_LSEEK 9
-#define SYS_FSTAT 10
-#define SYS_SLEEP 11
-#define SYS_GETTIMEOFDAY 12
-#define SYS_SEND_MSG 13
-#define SYS_RECEIVE_MSG 14
-
 #undef errno
 extern int errno;
 
 // Forward declarations for kernel-internal syscall implementations
 int sys_write(int file, char *ptr, int len);
-void* sys_sbrk(intptr_t incr);
+void *_sbrk(intptr_t incr); // Renamed to _sbrk to match newlib's expectation
 int sys_open(const char *name, int flags, int mode);
+void* proc_sbrk_internal(intptr_t increment); // Forward declaration for process-specific sbrk
+int sys_isatty(int file);
+int sys_kill(int pid, int sig);
+int sys_getpid(void);
+int sys_exec(const char *path, int argc, char *const argv[]); // Extern declaration for sys_exec from proc.c
+
+extern char _end; // Defined by the linker
+extern char _app_ram_start; // Defined by the linker
+
+static char *heap_end = 0;
+
+void *_sbrk(intptr_t incr) {
+    char *prev_heap_end;
+
+    if (heap_end == 0) {
+        heap_end = &_end;
+    }
+    prev_heap_end = heap_end;
+
+    if (heap_end + incr > &_app_ram_start) {
+        // Out of memory
+        errno = ENOMEM;
+        return (void *)-1;
+    }
+
+    heap_end += incr;
+    return (void *)prev_heap_end;
+}
 
 // sys_exit is called when a program (or the kernel) calls exit().
 void sys_exit(int status) {
@@ -50,7 +74,7 @@ void sys_exit(int status) {
         // Close all open files
         for (int i = 0; i < MAX_OPEN_FILES; i++) {
             if (current_process->fd_table[i] != NULL) {
-                free(current_process->fd_table[i]);
+                kfree(current_process->fd_table[i]);
                 current_process->fd_table[i] = NULL;
             }
         }
@@ -98,7 +122,7 @@ int sys_open(const char *name, int flags, int mode) {
     }
 
     // Allocate a new file_t structure
-    file_t* file = (file_t*)malloc(sizeof(file_t)); // Need a kernel malloc
+    file_t* file = (file_t*)kmalloc(sizeof(file_t)); // Need a kernel kmalloc
     if (file == NULL) {
         errno = ENOMEM;
         return -1;
@@ -122,7 +146,7 @@ int sys_close(int file) {
     }
 
     // Free the allocated file_t structure
-    free(current_process->fd_table[file]);
+    kfree(current_process->fd_table[file]);
     current_process->fd_table[file] = NULL;
 
     return 0;
@@ -160,7 +184,14 @@ int sys_sleep(uint32_t milliseconds) {
 
     return 0;
 }
-int sys_isatty(int file) { (void)file; return 1; }
+
+int sys_isatty(int file) {
+    if (file == 0 || file == 1) { // stdin or stdout
+        return 1;
+    }
+    return 0;
+}
+
 int sys_lseek(int file, int ptr, int dir) {
     if (!current_process || file < 0 || file >= MAX_OPEN_FILES || current_process->fd_table[file] == NULL) {
         errno = EBADF;
@@ -319,10 +350,22 @@ int sys_write(int file, char *ptr, int len) {
 }
 
 
-int sys_kill(int pid, int sig) { (void)pid; (void)sig; errno = EINVAL; return -1; }
-int sys_getpid(void) { return 1; }
+int sys_kill(int pid, int sig) {
+    (void)sig; // Currently ignore signal type
+    if (pid > 0 && pid <= MAX_PROCESSES && pcb_table[pid - 1].state != PROC_STATE_UNUSED) {
+        pcb_table[pid - 1].state = PROC_STATE_KILLED; // Mark process for termination
+        return 0;
+    }
+    errno = ESRCH; // No such process
+    return -1;
+}
 
-
+int sys_getpid(void) {
+    if (current_process) {
+        return current_process->pid;
+    }
+    return -1; // Should not happen in a running process
+}
 
 extern volatile uint32_t tick_count;
 
@@ -431,15 +474,39 @@ void svc_handler_c(uint32_t *stack) {
             break;
 
         case SYS_SBRK: // sbrk
-            ret = (int)_sbrk(r1);
+            ret = (int)proc_sbrk_internal(r1);
             break;
 
         case SYS_OPEN: // open
             ret = sys_open((const char *)r1, r2, r3);
             break;
+            
+        case SYS_CLOSE: // close
+            ret = sys_close(r1);
+            break;
+
+        case SYS_FSTAT: // fstat
+            ret = sys_fstat(r1, (struct stat *)r2);
+            break;
+
+        case SYS_ISATTY: // isatty
+            ret = sys_isatty(r1);
+            break;
+
+        case SYS_LSEEK: // lseek
+            ret = sys_lseek(r1, r2, r3);
+            break;
 
         case SYS_SLEEP: // sleep
             ret = sys_sleep(r1);
+            break;
+
+        case SYS_KILL: // kill
+            ret = sys_kill(r1, r2);
+            break;
+
+        case SYS_GETPID: // getpid
+            ret = sys_getpid();
             break;
 
         case SYS_GETTIMEOFDAY: // gettimeofday

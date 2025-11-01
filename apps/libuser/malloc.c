@@ -63,7 +63,7 @@ static Header *morecore(uint32_t nu) {
         nu = MIN_ALLOC_SIZE;
     }
 
-    cp = sbrk(nu * sizeof(Header));
+    cp = _sbrk(nu * sizeof(Header));
     if (cp == (char *)-1) { // No space at all
         return NULL;
     }

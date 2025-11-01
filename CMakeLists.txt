@@ -29,6 +29,7 @@ set(SOURCE_FILES
     src/drivers/display.c
     src/ramdisk.c
     src/fs.c
+    src/kmalloc.c
 )
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/src/linker.ld)
 

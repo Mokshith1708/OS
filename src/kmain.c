@@ -9,7 +9,7 @@
 
 // DEFINE THE PHYSICAL ADDRESS OF YOUR FRAMEBUFFER HERE
 // This address comes from your hardware design (e.g., Vivado address editor).
-#define FRAMEBUFFER_ADDR ((uint8_t*)0x21000000) // EXAMPLE ADDRESS! YOU MUST CHANGE THIS!
+#define FRAMEBUFFER_ADDR ((uint8_t*)0x17A06008) // EXAMPLE ADDRESS! YOU MUST CHANGE THIS!
 
 // This is the entry point called from boot.s
 void kmain(void) {

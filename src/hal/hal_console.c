@@ -5,7 +5,7 @@
 
 // --- New Keyboard Input ---
 // Memory-mapped location for keyboard input, as provided by the user.
-volatile char *keyboard_input_addr = (volatile char*)0x1180AA;
+volatile char *keyboard_input_addr = (volatile char*)0x17A06000 ;
 
 /* Initialize console - nothing needed for this simple implementation */
 void hal_console_init(void) {

@@ -10,12 +10,12 @@ ENTRY(Reset_Handler)
 /* NOTE: You MUST update these values for your specific chip! */
 MEMORY
 {
-    FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 128K
-    RAM   (rwx): ORIGIN = 0x20000000, LENGTH = 16K
+    FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 128K
+    RAM   (rwx): ORIGIN = 0x18000000, LENGTH = 16K
 }
 
 /* --- Global Symbols --- */
-_estack = ORIGIN(RAM) + LENGTH(RAM); /* Top of stack, grows down */
+_estack = 0x0bffffff;
 _ram_end = _estack;
 _os_ram_size = 4K; /* Reserve 4K of RAM for the OS */
 _app_ram_start = ORIGIN(RAM) + _os_ram_size;

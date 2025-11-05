@@ -13,12 +13,17 @@
 
 // This is the entry point called from boot.s
 void kmain(void) {
-    hal_console_puts("MokshithOS Kernel Initializing...\r\n");
+    // NOTE: The framebuffer address is a placeholder and MUST be updated
+    // to match the physical address on your FPGA board.
+    display_init(FRAMEBUFFER_ADDR);
+    display_clear_screen(0x000000); // Clear screen to black
+
+    hal_console_puts("OS Kernel Initializing...\r\n");
 
     // Initialize subsystems
     proc_init();
     fs_init();
-    systick_init(100); // Initialize for 100Hz ticks
+    // systick_init(100); // Already commented out for non-preemptive
 
     // Create the first user process (the shell)
     start_process("shell_app.proc");

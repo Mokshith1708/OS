@@ -29,8 +29,7 @@ qemu-system-arm \
   -nographic \
   -serial null -serial mon:stdio \
   --semihosting-config enable=on,target=native \
-  -kernel build/OS.elf \
-  -S -gdb tcp::1234 &
+  -kernel build/OS.elf 2>&1 | tee "$LOG_FILE" &
 QEMU_PID=$!
 echo "QEMU PID: $QEMU_PID"
 

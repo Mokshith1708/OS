@@ -9,7 +9,7 @@ set(CMAKE_OBJCOPY ${TOOLCHAIN_PREFIX}objcopy)
 set(CMAKE_SIZE ${TOOLCHAIN_PREFIX}size)
 set(CMAKE_AR ${TOOLCHAIN_PREFIX}ar) # Add the archiver tool
 
-set(CPU_FLAGS "-mcpu=cortex-m0 -mthumb")
+# set(CPU_FLAGS "-mcpu=cortex-m0 -mthumb")
 set(CMAKE_C_FLAGS "${CPU_FLAGS} -g -Wall -Os -ffunction-sections -fdata-sections" CACHE INTERNAL "")
 set(CMAKE_ASM_FLAGS "${CPU_FLAGS} -g -mthumb-interwork" CACHE INTERNAL "")
 

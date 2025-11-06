@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include "include/unistd.h"
 
+extern void *_sbrk(intptr_t);
+
 // Block header
 typedef long Align;
 

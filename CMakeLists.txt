@@ -9,7 +9,7 @@ set(CMAKE_OBJCOPY ${TOOLCHAIN_PREFIX}objcopy)
 set(CMAKE_SIZE ${TOOLCHAIN_PREFIX}size)
 set(CMAKE_AR ${TOOLCHAIN_PREFIX}ar) # Add the archiver tool
 
-# set(CPU_FLAGS "-mcpu=cortex-m0 -mthumb")
+set(CPU_FLAGS "-mcpu=cortex-a9")
 set(CMAKE_C_FLAGS "${CPU_FLAGS} -g -Wall -Os -ffunction-sections -fdata-sections" CACHE INTERNAL "")
 set(CMAKE_ASM_FLAGS "${CPU_FLAGS} -g -mthumb-interwork" CACHE INTERNAL "")
 
@@ -40,6 +40,7 @@ target_link_options(${PROJECT_NAME}.elf PRIVATE
     -T ${LINKER_SCRIPT}
     -Wl,--gc-sections
     -Wl,-Map=${PROJECT_NAME}.map
+    -nostartfiles
 )
 # No need to explicitly link gcc, the compiler driver does that.
 
@@ -75,17 +76,15 @@ target_include_directories(user PUBLIC src/libuser)
 
 # Apply compile flags properly for C and ASM files
 target_compile_options(user PRIVATE
-    $<$<COMPILE_LANGUAGE:C>:-mcpu=cortex-m0>
-    $<$<COMPILE_LANGUAGE:C>:-mthumb>
+    $<$<COMPILE_LANGUAGE:C>:${CPU_FLAGS}>
     $<$<COMPILE_LANGUAGE:C>:-ffunction-sections>
     $<$<COMPILE_LANGUAGE:C>:-fdata-sections>
-    $<$<COMPILE_LANGUAGE:ASM>:-mcpu=cortex-m0>
-    $<$<COMPILE_LANGUAGE:ASM>:-mthumb>
+    $<$<COMPILE_LANGUAGE:ASM>:${CPU_FLAGS}>
 )
 
 # A message to show where the library is built
 add_custom_command(TARGET user POST_BUILD
-    COMMAND echo "--- Built Cortex-M0 User Library: libuser.a in build/ ---"
+    COMMAND echo "--- Built Cortex-A9 User Library: libuser.a in build/ ---"
 )
 
 # ------------------------------------------------------------------

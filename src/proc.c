@@ -124,7 +124,7 @@ int sys_exec(const char *path, int argc, char *const argv[]) {
     // --- Create the fake exception frame ---
     uint32_t *user_stack = (uint32_t *)sp;
 
-    *--user_stack = 0x01000000u; // xPSR: Set T-bit for Thumb mode
+    *--user_stack = 0x10u; // xPSR: User mode, ARM state
     *--user_stack = entry;       // PC: The process entry point
     *--user_stack = 0;           // LR (return from main)
     *--user_stack = 0;           // R12

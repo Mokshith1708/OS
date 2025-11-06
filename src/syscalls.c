@@ -43,19 +43,17 @@ int sys_getpid(void);
 int sys_exec(const char *path, int argc, char *const argv[]); // Extern declaration for sys_exec from proc.c
 
 extern char _end; // Defined by the linker
+extern char _estack; // Defined by the linker
 extern char _app_ram_start; // Defined by the linker
 
-static char *heap_end = 0;
+
 
 void *_sbrk(intptr_t incr) {
-    char *prev_heap_end;
+    extern char _end; // Defined by the linker
+    static char *heap_end = &_end;
+    char *prev_heap_end = heap_end;
 
-    if (heap_end == 0) {
-        heap_end = &_end;
-    }
-    prev_heap_end = heap_end;
-
-    if (heap_end + incr > &_app_ram_start) {
+    if (heap_end + incr > (char *)_estack) {
         // Out of memory
         errno = ENOMEM;
         return (void *)-1;
@@ -91,6 +89,10 @@ void sys_exit(int status) {
 
     // This point should be unreachable
     while(1);
+}
+
+void _exit(int status) {
+    sys_exit(status);
 }
 
 int sys_open(const char *name, int flags, int mode) {
@@ -535,13 +537,10 @@ void svc_handler_c(uint32_t *stack) {
 __attribute__((naked))
 void SVC_Handler(void) {
     __asm__ volatile (
-        // Determine which stack pointer (MSP or PSP) was active
-        "mrs r0, psp\n" // Assume PSP is active
-        "mov r1, sp\n"  // Get MSP
-        "cmp r0, r1\n"  // Compare PSP and MSP
-        "bne .L_psp_is_active\n" // If not equal, PSP was active
-        "mrs r0, msp\n" // If equal, MSP was active
-    ".L_psp_is_active:\n"
-        "b svc_handler_c\n"
+        "push {lr}\n"
+        "mov r0, sp\n"
+        "bl svc_handler_c\n"
+        "pop {lr}\n"
+        "bx lr\n"
     );
 }

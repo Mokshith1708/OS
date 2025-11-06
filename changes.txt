@@ -1,0 +1,78 @@
+CMakeLists.txt:
+- Line 11: Changed CPU_FLAGS to use cortex-a9.
+- Line 79: Changed cortex-m0 to cortex-a9.
+- Line 83: Changed cortex-m0 to cortex-a9.
+- Line 88: Changed message to reflect cortex-a9 build.
+- Added -nostartfiles to the linker flags.
+- Updated user library compile flags to use CPU_FLAGS.
+- Removed -mthumb from CPU_FLAGS.
+
+src/boot.s:
+- Replaced the entire file with a new version for Cortex-A9.
+- The new file includes:
+    - A new vector table.
+    - Initialization for caches and TLB.
+    - Stack setup for SVC mode.
+- Updated vector table to include handlers for UndefinedInstruction, PrefetchAbort, and DataAbort.
+- Added weak symbols for the new handlers.
+
+src/linker.ld:
+- Replaced the entire file with a new version for Cortex-A9.
+- The new file defines a single RAM region and places all sections in it.
+- The entry point has been updated to _start.
+- Added __app_ram_start__, __app_ram_end__, __ramdisk_start, __ramdisk_end, __bss_start__, and __bss_end__ symbols.
+
+src/mmu.c:
+- Replaced the entire file with a new version for Cortex-A9.
+- The new file includes a basic MMU initialization with a 1-to-1 mapping.
+
+src/interrupt.c:
+- Replaced the entire file with a new version for Cortex-A9.
+- The new file includes a GIC initialization and an interrupt handler.
+
+src/systick.c:
+- Replaced the entire file with a new version for Cortex-A9.
+- The new file uses the Cortex-A9 private timer to generate interrupts.
+- Removed the call to schedule() to make the scheduling non-preemptive.
+
+src/syscalls.c:
+- Updated SVC_Handler to be compatible with the Cortex-A9 architecture.
+- Updated _sbrk function to use the new memory layout.
+- Added an extern declaration for _estack.
+- Removed the unused heap_end variable.
+- Added an _exit function.
+
+src/fault.c:
+- Replaced the entire file with a new version for Cortex-A9.
+- The new file handles DataAbort and PrefetchAbort exceptions.
+
+src/jump_trampoline.s:
+- Replaced the entire file with a new version for Cortex-A9.
+
+src/proc.c:
+- Updated the xPSR value for the user process to be in ARM mode.
+
+apps/shell/build_app.sh:
+- Updated the CPU from cortex-m0 to cortex-a9.
+- Removed the -mthumb flag.
+
+apps/hello/build_app.sh:
+- Updated the CPU from cortex-m0 to cortex-a9.
+- Removed the -mthumb flag.
+
+apps/test_write/build_app.sh:
+- Updated the CPU from cortex-m0 to cortex-a9.
+- Removed the -mthumb flag.
+- Fixed a typo in the gcc flags.
+
+apps/shell/vectors.s:
+- Updated the CPU to cortex-a9 and use arm instructions.
+
+apps/hello/vectors.s:
+- Updated the CPU to cortex-a9 and use arm instructions.
+
+apps/test_write/vectors.s:
+- Updated the CPU to cortex-a9 and use arm instructions.
+
+build_all.sh:
+- Modified the build order to build the tools and libuser.a before building the applications.

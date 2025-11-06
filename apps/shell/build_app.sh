@@ -15,8 +15,8 @@ TOOLCHAIN_PREFIX=arm-none-eabi
 mkdir -p build
 
 # Compile the C sources for the app itself.
-${TOOLCHAIN_PREFIX}-gcc -c -o build/$APP_NAME.o $APP_NAME.c -O2 -Wall -Wextra -nostdlib -ffreestanding -mcpu=cortex-m0 -mthumb -I../libuser/include
-${TOOLCHAIN_PREFIX}-as -o build/vectors.o vectors.s -mcpu=cortex-m0 -mthumb
+${TOOLCHAIN_PREFIX}-gcc -c -o build/$APP_NAME.o $APP_NAME.c -O2 -Wall -Wextra -nostdlib -mcpu=cortex-a9 -I../libuser/include
+${TOOLCHAIN_PREFIX}-as -o build/vectors.o vectors.s -mcpu=cortex-a9
 
 # Link the application using the GCC compiler driver.
 # We now link against the libuser.a static library built by the main cmake build.

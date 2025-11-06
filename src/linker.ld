@@ -1,71 +1,48 @@
 /*
  * MokshithOS Linker Script (linker.ld)
- * Target: Cortex-M0
+ * Target: Cortex-A9
  *
  * Description: Defines the memory map for the OS kernel.
  */
-ENTRY(Reset_Handler)
+ENTRY(_start)
 
 /* --- Memory Layout --- */
-/* NOTE: You MUST update these values for your specific chip! */
 MEMORY
 {
-    FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 128K
-    RAM   (rwx): ORIGIN = 0x18000000, LENGTH = 16K
+    RAM (rwx) : ORIGIN = 0x10000000, LENGTH = 128M
 }
 
 /* --- Global Symbols --- */
-_estack = 0x0bffffff;
-_ram_end = _estack;
-_os_ram_size = 4K; /* Reserve 4K of RAM for the OS */
-_app_ram_start = ORIGIN(RAM) + _os_ram_size;
+_estack = ORIGIN(RAM) + LENGTH(RAM);
 
 SECTIONS
 {
-    /* The vector table must be at the beginning of FLASH */
-    .isr_vector :
+    .text :
     {
         . = ALIGN(4);
         KEEP(*(.isr_vector))
-        . = ALIGN(4);
-    } > FLASH
-
-    /* Kernel code and read-only data follows the vector table */
-    .text :
-    {
         *(.text*)
         *(.rodata*)
         . = ALIGN(4);
-    } > FLASH
+    } > RAM
 
-    .init :
-    {
-        KEEP(*(.init))
-        KEEP(*(.init_array))
-        KEEP(*(.fini_array))
-    } > FLASH
-
-    /* This symbol marks where the .data initial values are in FLASH */
-    _sidata = .;
-
-    /* Kernel's initialized data section in RAM */
-    /* AT> FLASH specifies where to load it from */
-    .data : AT ( _sidata )
+    .data :
     {
         . = ALIGN(4);
-        _sdata = .;        /* .data start in RAM */
+        _sdata = .;
         *(.data*)
-        _edata = .;        /* .data end in RAM */
+        _edata = .;
         . = ALIGN(4);
     } > RAM
 
-    /* Kernel's uninitialized data section (BSS) in RAM */
-    .bss (NOLOAD) :
+    .bss :
     {
-        _sbss = .;         /* .bss start in RAM */
+        __bss_start__ = .;
+        _sbss = .;
         *(.bss*)
         *(COMMON)
-        _ebss = .;         /* .bss end in RAM */
+        _ebss = .;
+        __bss_end__ = .;
     } > RAM
 
     .ramdisk :
@@ -76,19 +53,8 @@ SECTIONS
         __ramdisk_end = .;
     } > RAM
 
-    /* _end marks the end of the kernel's static memory usage */
-    /* The kernel heap will start here */
     _end = .;
 
-    /* Define user heap symbols */
-    __uheap_start = _app_ram_start;
-    __uheap_end = _ram_end;
-
-    /* Define app ram symbols */
-    __app_ram_start__ = _app_ram_start;
-    __app_ram_end__ = _ram_end;
-
-    /* Define total RAM symbols */
-    __ram_start__ = ORIGIN(RAM);
-    __ram_end__ = ORIGIN(RAM) + LENGTH(RAM);
+    __app_ram_start__ = _end;
+    __app_ram_end__ = _estack;
 }

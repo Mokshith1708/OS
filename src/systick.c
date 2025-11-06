@@ -2,52 +2,47 @@
 #include "include/hal_console.h" // For debugging
 #include "include/proc.h" // For process management
 
-// SysTick Register Definitions (Cortex-M0)
-#define SYSTICK_CTRL   (*(volatile uint32_t *)0xE000E010)
-#define SYSTICK_LOAD   (*(volatile uint32_t *)0xE000E014)
-#define SYSTICK_VAL    (*(volatile uint32_t *)0xE000E018)
+// Cortex-A9 Private Timer Register Definitions
+#define CORTEX_A9_TIMER_BASE 0xF8F00600
+#define TIMER_LOAD   (*(volatile uint32_t *)(CORTEX_A9_TIMER_BASE + 0x00))
+#define TIMER_COUNT  (*(volatile uint32_t *)(CORTEX_A9_TIMER_BASE + 0x04))
+#define TIMER_CTRL   (*(volatile uint32_t *)(CORTEX_A9_TIMER_BASE + 0x08))
+#define TIMER_ISR    (*(volatile uint32_t *)(CORTEX_A9_TIMER_BASE + 0x0C))
 
-// SysTick Control Register Flags
-#define SYSTICK_CTRL_ENABLE    (1 << 0)
-#define SYSTICK_CTRL_TICKINT   (1 << 1)
-#define SYSTICK_CTRL_CLKSOURCE (1 << 2) // 1 = Processor clock
+// Timer Control Register Flags
+#define TIMER_CTRL_ENABLE      (1 << 0)
+#define TIMER_CTRL_AUTO_RELOAD (1 << 1)
+#define TIMER_CTRL_IRQ_ENABLE  (1 << 2)
 
-// This should be configured for the specific target hardware's clock speed.
-// A common value for FPGA projects is 100MHz.
 #define SYSTEM_CLOCK_HZ 100000000
-
-#define ICSR (*(volatile uint32_t *)0xE000ED04)
-#define PENDSVSET (1 << 28)
 
 volatile uint32_t tick_count = 0;
 
 extern pcb_t pcb_table[MAX_PROCESSES];
 
 void systick_init(uint32_t frequency) {
-    // Disable SysTick during setup
-    SYSTICK_CTRL = 0;
+    // Disable timer during setup
+    TIMER_CTRL = 0;
 
-    // Calculate reload value. The timer is a 24-bit down-counter.
+    // Calculate reload value
     uint32_t reload_value = (SYSTEM_CLOCK_HZ / frequency) - 1;
 
-    // Set reload and clear the current value
-    SYSTICK_LOAD = reload_value;
-    SYSTICK_VAL = 0;
+    // Set reload value
+    TIMER_LOAD = reload_value;
 
-    // Enable SysTick with processor clock and interrupts
-    SYSTICK_CTRL = SYSTICK_CTRL_ENABLE | SYSTICK_CTRL_TICKINT | SYSTICK_CTRL_CLKSOURCE;
+    // Enable timer with auto-reload and interrupt
+    TIMER_CTRL = TIMER_CTRL_ENABLE | TIMER_CTRL_AUTO_RELOAD | TIMER_CTRL_IRQ_ENABLE;
 
-    hal_console_puts("SysTick initialized for ");
+    hal_console_puts("Cortex-A9 Private Timer initialized for ");
     hal_console_put_int(frequency);
     hal_console_puts(" Hz.\r\n");
 }
 
-/**
- * @brief This is the SysTick interrupt handler.
- * The function name is fixed and is referenced by the vector table in boot.s
- */
 void SysTick_Handler(void) {
     tick_count++;
+
+    // Clear the interrupt flag
+    TIMER_ISR = 1;
 
     // Update sleep timers for all processes
     for (int i = 0; i < MAX_PROCESSES; i++) {
@@ -60,8 +55,5 @@ void SysTick_Handler(void) {
         }
     }
 
-    // This is the heartbeat of the OS. On each tick, we request the
-    // PendSV exception, which has a lower priority. The PendSV handler
-    // will perform the actual context switch when it is safe to do so.
-    ICSR |= PENDSVSET;
+
 }

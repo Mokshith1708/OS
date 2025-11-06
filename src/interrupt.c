@@ -1,58 +1,75 @@
 #include <stdint.h>
 #include "include/proc.h"
+#include "include/hal_console.h"
 
-// The PendSV handler is used to perform context switching.
-// It is triggered by the SysTick handler and has a low priority to ensure
-// it only runs when no other higher-priority interrupts are active.
+// GIC Register Definitions
+#define GIC_DIST_BASE 0xF8F01000
+#define GIC_CPU_BASE  0xF8F00100
 
-__attribute__((naked))
-void PendSV_Handler(void) {
-    __asm__ volatile (
-        // 1. Save context of current process
-        "ldr r2, =current_process\n"
-        "ldr r1, [r2]\n"
-        "cmp r1, #0\n"
-        "beq .L_restore_context_pendsv\n" // No process running, skip save
+#define GIC_DIST_CTRL      (*(volatile uint32_t *)(GIC_DIST_BASE + 0x000))
+#define GIC_DIST_ISENABLER ((volatile uint32_t *)(GIC_DIST_BASE + 0x100))
+#define GIC_DIST_ICENABLER ((volatile uint32_t *)(GIC_DIST_BASE + 0x180))
+#define GIC_DIST_IPRIORITYR ((volatile uint32_t *)(GIC_DIST_BASE + 0x400))
+#define GIC_DIST_ITARGETSR ((volatile uint32_t *)(GIC_DIST_BASE + 0x800))
 
-        // Save the process stack pointer (PSP)
-        "mrs r0, psp\n"
+#define GIC_CPU_CTRL       (*(volatile uint32_t *)(GIC_CPU_BASE + 0x00))
+#define GIC_CPU_PMR        (*(volatile uint32_t *)(GIC_CPU_BASE + 0x04))
+#define GIC_CPU_IAR        (*(volatile uint32_t *)(GIC_CPU_BASE + 0x0C))
+#define GIC_CPU_EOIR       (*(volatile uint32_t *)(GIC_CPU_BASE + 0x10))
 
-        // Push r4-r11 onto the process stack.
-        // Cortex-M0 doesn't have stmdb. We need to manually push.
-        "sub r0, #32\n" // Make space for r4-r11 (8 regs * 4 bytes)
-        "str r0, [r1]\n" // Save new SP to pcb->sp
+void SysTick_Handler(void);
 
-        "stmia r0!, {r4-r7}\n" // Store r4-r7
-        "mov r4, r8\n"
-        "mov r5, r9\n"
-        "mov r6, r10\n"
-        "mov r7, r11\n"
-        "stmia r0!, {r4-r7}\n" // Store r8-r11
+void gic_init(void) {
+    // Disable the GIC distributor
+    GIC_DIST_CTRL = 0;
 
-        ".L_restore_context_pendsv:\n"
-        // 2. Call the C scheduler to choose the next process
-        "cpsie i\n"
-        "bl schedule\n"
-        "cpsid i\n"
+    // Set all interrupts to be level-sensitive
+    for (int i = 0; i < 32; i++) {
+        GIC_DIST_ICENABLER[i] = 0xFFFFFFFF;
+    }
 
-        // 3. Restore context of the next process
-        "ldr r2, =current_process\n"
-        "ldr r1, [r2]\n"
-        "ldr r0, [r1]\n"      // r0 = new_process->sp
+    // Set all interrupts to the lowest priority
+    for (int i = 0; i < 255; i++) {
+        GIC_DIST_IPRIORITYR[i] = 0xFFFFFFFF;
+    }
 
-        // Pop r4-r11 from the new process's stack
-        "ldmia r0!, {r4-r7}\n" // Restore r4-r7
-        "mov r8, r4\n"
-        "mov r9, r5\n"
-        "mov r10, r6\n"
-        "mov r11, r7\n"
-        "ldmia r0!, {r4-r7}\n" // Restore r8-r11
+    // Route all interrupts to CPU0
+    for (int i = 0; i < 255; i++) {
+        GIC_DIST_ITARGETSR[i] = 0x01010101;
+    }
 
-        // Load the PSP with the new stack pointer
-        "msr psp, r0\n"
+    // Enable all interrupts
+    for (int i = 0; i < 32; i++) {
+        GIC_DIST_ISENABLER[i] = 0xFFFFFFFF;
+    }
 
-        // 4. Return from interrupt
-        "ldr r0, =0xFFFFFFF9\n" // EXC_RETURN
-        "bx r0\n"
-    );
+    // Enable the GIC distributor
+    GIC_DIST_CTRL = 1;
+
+    // Configure the CPU interface
+    // Set the priority mask to allow all priorities
+    GIC_CPU_PMR = 0xFF;
+
+    // Enable the CPU interface
+    GIC_CPU_CTRL = 1;
+}
+
+void irq_handler(void) {
+    // Read the interrupt ID
+    uint32_t irq = GIC_CPU_IAR;
+
+    // Handle the interrupt
+    switch (irq) {
+        case 29: // Private timer interrupt
+            SysTick_Handler();
+            break;
+        default:
+            hal_console_puts("Unknown interrupt: ");
+            hal_console_put_int(irq);
+            hal_console_puts("\n");
+            break;
+    }
+
+    // End of interrupt
+    GIC_CPU_EOIR = irq;
 }

@@ -12,5 +12,14 @@
 .text
 .global Reset_Handler
 Reset_Handler:
+    ldr r0, =#1             @ argc = 1
+    ldr r1, =argv_array     @ r1 = &argv_array
     bl main
 1:  b 1b
+
+.section .rodata
+shell_str:
+    .asciz "shell"
+argv_array:
+    .word shell_str
+    .word 0 @ NULL terminator for argv

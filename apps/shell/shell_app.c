@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdio.h>
 #include "unistd.h"
 
 #define MAX_ARGS 8

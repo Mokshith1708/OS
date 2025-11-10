@@ -16,22 +16,19 @@ jump_to_entry:
 
 /* void proc_switch_to_user(uint32_t user_sp, uint32_t entry) -- never returns */
 proc_switch_to_user:
-    /* r0 = user_sp, r1 = entry */
-    mov sp, r0
-    mov lr, #0
-    mov r0, #0
-    mov r1, #0
-    mov r2, #0
-    mov r3, #0
-    mov r4, #0
-    mov r5, #0
-    mov r6, #0
-    mov r7, #0
-    mov r8, #0
-    mov r9, #0
-    mov r10, #0
-    mov r11, #0
-    mov r12, #0
-    cpsie i
-    msr cpsr_c, #0x10
-    bx r1
+    mov sp, r0              // r0 has the user stack pointer
+
+    // Restore the user context from the stack
+    // The stack frame was created in sys_exec in proc.c
+    // Frame: {r0-r3, r12, lr, pc, xpsr}
+    ldmia sp!, {r0-r3, r12, lr}
+    
+    // Pop the user PC and xPSR into temporary registers
+    ldmia sp!, {r4, r5}
+
+    // Restore the SPSR from the popped xPSR
+    msr spsr_cxsf, r5
+
+    // Use movs to return from exception, which copies SPSR to CPSR
+    // and branches to the address in r4 (the user PC)
+    movs pc, r4
